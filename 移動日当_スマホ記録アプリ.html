@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>移動日当記録</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a40;
+    --accent: #4f8ef7;
+    --accent2: #7b5ea7;
+    --success: #2dd4a0;
+    --danger: #f75f5f;
+    --warning: #f7b84f;
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --text3: #4a4a6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* ログイン画面 */
+  #login-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    background: radial-gradient(ellipse at 50% 0%, #1a1a3a 0%, var(--bg) 70%);
+  }
+
+  .logo-area {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 32px;
+    box-shadow: 0 0 40px rgba(79,142,247,0.3);
+  }
+
+  .logo-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 360px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 24px;
+  }
+
+  .form-label {
+    font-size: 12px;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 20px;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-primary:active { opacity: 0.8; transform: scale(0.98); }
+
+  /* メイン画面 */
+  #main-screen { display: none; min-height: 100vh; min-height: 100dvh; }
+
+  .top-bar {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .top-bar-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .top-bar-date {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .content { padding: 20px; }
+
+  /* ステータスカード */
+  .status-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .status-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .status-card.idle::before { background: var(--border); }
+  .status-card.traveling::before { background: linear-gradient(90deg, var(--accent), var(--success)); }
+  .status-card.done::before { background: linear-gradient(90deg, var(--success), var(--accent2)); }
+
+  .status-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .status-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .status-idle { color: var(--text2); }
+  .status-moving { color: var(--accent); }
+  .status-complete { color: var(--success); }
+
+  .gps-info {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    margin-top: 8px;
+    word-break: break-all;
+  }
+
+  .time-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 6px;
+  }
+
+  /* 大きなアクションボタン */
+  .action-btn {
+    width: 100%;
+    border: none;
+    border-radius: 20px;
+    padding: 28px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .action-btn .btn-icon { font-size: 36px; }
+  .action-btn .btn-sub { font-size: 12px; font-weight: 400; opacity: 0.7; }
+
+  .btn-depart {
+    background: linear-gradient(135deg, #1a3a6a, #2a4a8a);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 30px rgba(79,142,247,0.15);
+  }
+
+  .btn-arrive {
+    background: linear-gradient(135deg, #1a4a3a, #2a6a4a);
+    border: 2px solid var(--success);
+    color: var(--success);
+    box-shadow: 0 0 30px rgba(45,212,160,0.15);
+  }
+
+  .btn-disabled-state {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    color: var(--text3);
+  }
+
+  /* 入力フォーム */
+  .input-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+
+  textarea.form-input {
+    resize: none;
+    height: 80px;
+    line-height: 1.6;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+  }
+
+  /* 距離・日当表示 */
+  .result-card {
+    background: linear-gradient(135deg, #0d1f3a, #0d2a1f);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-row:last-child { border-bottom: none; }
+
+  .result-label { font-size: 13px; color: var(--text2); }
+
+  .result-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .result-allowance {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--success);
+  }
+
+  /* 送信ボタン */
+  .btn-submit {
+    background: linear-gradient(135deg, var(--success), #1a8a6a);
+    border: none;
+    border-radius: 16px;
+    padding: 18px;
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+    display: none;
+    margin-bottom: 16px;
+  }
+
+  .btn-submit:active { opacity: 0.8; transform: scale(0.98); }
+
+  /* 履歴リスト */
+  .history-section {
+    margin-top: 8px;
+  }
+
+  .history-title {
+    font-size: 13px;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+
+  .history-date {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 6px;
+  }
+
+  .history-distance {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .history-allowance {
+    font-size: 14px;
+    color: var(--success);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .history-purpose {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 6px;
+  }
+
+  /* GPS取得中アニメ */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .gps-loading { animation: pulse 1.2s infinite; color: var(--warning); }
+
+  /* トースト */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 14px;
+    z-index: 999;
+    transition: transform 0.3s;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  /* タブ */
+  .tab-bar {
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 10px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+  }
+
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn .tab-icon { font-size: 20px; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ログイン画面 -->
+<div id="login-screen">
+  <div class="logo-area">
+    <div class="logo-icon">🚗</div>
+    <div class="logo-title">移動日当記録</div>
+    <div class="logo-sub">TRAVEL ALLOWANCE TRACKER</div>
+  </div>
+  <div class="login-card">
+    <label class="form-label">パスワード</label>
+    <input type="password" class="form-input" id="password-input" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn-primary" onclick="login()">ログイン</button>
+  </div>
+</div>
+
+<!-- メイン画面 -->
+<div id="main-screen">
+  <div class="top-bar">
+    <div>
+      <div class="top-bar-title">移動日当記録</div>
+      <div class="top-bar-date" id="today-date"></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">ログアウト</button>
+  </div>
+
+  <!-- タブコンテンツ -->
+  <div style="flex:1; overflow-y: auto;">
+
+    <!-- 記録タブ -->
+    <div class="tab-content active" id="tab-record">
+      <div class="content">
+
+        <!-- ステータスカード -->
+        <div class="status-card idle" id="status-card">
+          <div class="status-label">現在の状態</div>
+          <div class="status-value status-idle" id="status-text">待機中</div>
+          <div class="gps-info" id="gps-info">出発ボタンを押して移動を開始</div>
+        </div>
+
+        <!-- 出発ボタン -->
+        <button class="action-btn btn-depart" id="btn-depart" onclick="depart()">
+          <span class="btn-icon">📍</span>
+          <span>出発</span>
+          <span class="btn-sub">タップしてGPS記録開始</span>
+        </button>
+
+        <!-- 到着ボタン -->
+        <button class="action-btn btn-disabled-state" id="btn-arrive" onclick="arrive()" disabled>
+          <span class="btn-icon">🏁</span>
+          <span>到着</span>
+          <span class="btn-sub">目的地に着いたらタップ</span>
+        </button>
+
+        <!-- 結果表示 -->
+        <div class="result-card" id="result-card">
+          <div class="result-row">
+            <span class="result-label">移動距離（直線・片道）</span>
+            <span class="result-value" id="result-distance">-</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">該当区分</span>
+            <span class="result-value" id="result-tier" style="font-size:14px;">-</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">移動日当</span>
+            <span class="result-allowance" id="result-allowance">-</span>
+          </div>
+        </div>
+
+        <!-- 入力フォーム -->
+        <div class="input-section" id="input-section" style="display:none;">
+          <div class="section-title">任意入力</div>
+          <div class="form-group">
+            <label class="form-label">目的</label>
+            <textarea class="form-input" id="input-purpose" placeholder="例）〇〇商談、現場確認など"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">面談相手</label>
+            <input type="text" class="form-input" id="input-person" placeholder="例）〇〇社 田中様">
+          </div>
+        </div>
+
+        <!-- 送信ボタン -->
+        <button class="btn-submit" id="btn-submit" onclick="submitRecord()">
+          ✓ この移動を記録する
+        </button>
+
+      </div>
+    </div>
+
+    <!-- 履歴タブ -->
+    <div class="tab-content" id="tab-history">
+      <div class="content">
+        <div class="history-section">
+          <div class="history-title">今月の記録</div>
+          <div id="history-list">
+            <div class="empty-state">記録はまだありません</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- タブバー -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('record', this)">
+      <span class="tab-icon">🚗</span>
+      記録
+    </button>
+    <button class="tab-btn" onclick="switchTab('history', this)">
+      <span class="tab-icon">📋</span>
+      履歴
+    </button>
+  </div>
+</div>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 設定 =====
+const CONFIG = {
+  password: 'admin1234', // 管理画面で変更可能
+  tiers: [
+    { min: 0,   max: 8,   label: '8km未満',           allowance: 0 },
+    { min: 8,   max: 16,  label: '8km以上16km未満',   allowance: 1000 },
+    { min: 16,  max: 50,  label: '16km以上50km未満',  allowance: 2000 },
+    { min: 50,  max: 100, label: '50km以上100km未満', allowance: 3000 },
+    { min: 100, max: 9999,label: '100km以上',         allowance: 5000 },
+  ]
+};
+
+// ===== 状態管理 =====
+let state = {
+  phase: 'idle', // idle | traveling | done
+  departTime: null,
+  arriveTime: null,
+  departGPS: null,
+  arriveGPS: null,
+  distance: null,
+  allowance: null,
+  tier: null,
+};
+
+// ===== 日付表示 =====
+function updateDate() {
+  const now = new Date();
+  const d = now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
+  document.getElementById('today-date').textContent = d;
+}
+
+// ===== ログイン =====
+function login() {
+  const pw = document.getElementById('password-input').value;
+  if (pw === CONFIG.password) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'flex';
+    document.getElementById('main-screen').style.flexDirection = 'column';
+    updateDate();
+    loadHistory();
+    showToast('ログインしました', 'success');
+  } else {
+    showToast('パスワードが違います', 'error');
+  }
+}
+
+document.getElementById('password-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') login();
+});
+
+function logout() {
+  if (state.phase === 'traveling') {
+    if (!confirm('移動中です。ログアウトしますか？')) return;
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('password-input').value = '';
+  resetState();
+}
+
+// ===== GPS取得 =====
+function getGPS() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('このブラウザはGPSに対応していません'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+      err => reject(err),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  });
+}
+
+// ===== ハーバーサイン計算 =====
+function calcDistance(a, b) {
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLng = (b.lng - a.lng) * Math.PI / 180;
+  const x = Math.sin(dLat/2) ** 2 +
+            Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) *
+            Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+
+// ===== 距離帯判定 =====
+function getTier(km) {
+  return CONFIG.tiers.find(t => km >= t.min && km < t.max) || CONFIG.tiers[CONFIG.tiers.length-1];
+}
+
+// ===== 出発 =====
+async function depart() {
+  const btn = document.getElementById('btn-depart');
+  btn.disabled = true;
+
+  document.getElementById('status-text').textContent = 'GPS取得中...';
+  document.getElementById('status-text').className = 'status-value gps-loading';
+  document.getElementById('gps-info').textContent = '現在地を取得しています...';
+
+  try {
+    const gps = await getGPS();
+    state.departGPS = gps;
+    state.departTime = new Date();
+    state.phase = 'traveling';
+
+    const card = document.getElementById('status-card');
+    card.className = 'status-card traveling';
+    document.getElementById('status-text').textContent = '移動中';
+    document.getElementById('status-text').className = 'status-value status-moving';
+    document.getElementById('gps-info').innerHTML =
+      `出発: ${state.departTime.toLocaleTimeString('ja-JP')}<br>` +
+      `📍 ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}<br>` +
+      `精度: ±${Math.round(gps.accuracy)}m`;
+
+    // 到着ボタン有効化
+    const btnArrive = document.getElementById('btn-arrive');
+    btnArrive.disabled = false;
+    btnArrive.className = 'action-btn btn-arrive';
+
+    btn.style.display = 'none';
+    showToast('出発を記録しました', 'success');
+
+  } catch(e) {
+    btn.disabled = false;
+    document.getElementById('status-text').textContent = '待機中';
+    document.getElementById('status-text').className = 'status-value status-idle';
+    document.getElementById('gps-info').textContent = 'GPS取得失敗: ' + (e.message || '位置情報を許可してください');
+    showToast('GPS取得に失敗しました', 'error');
+  }
+}
+
+// ===== 到着 =====
+async function arrive() {
+  const btn = document.getElementById('btn-arrive');
+  btn.disabled = true;
+
+  document.getElementById('status-text').textContent = 'GPS取得中...';
+  document.getElementById('status-text').className = 'status-value gps-loading';
+
+  try {
+    const gps = await getGPS();
+    state.arriveGPS = gps;
+    state.arriveTime = new Date();
+    state.phase = 'done';
+
+    // 距離計算
+    const km = calcDistance(state.departGPS, state.arriveGPS);
+    state.distance = Math.round(km * 10) / 10;
+    const tier = getTier(state.distance);
+    state.tier = tier;
+    state.allowance = tier.allowance;
+
+    // UI更新
+    const card = document.getElementById('status-card');
+    card.className = 'status-card done';
+    document.getElementById('status-text').textContent = '到着完了';
+    document.getElementById('status-text').className = 'status-value status-complete';
+    document.getElementById('gps-info').innerHTML =
+      `出発: ${state.departTime.toLocaleTimeString('ja-JP')} → 到着: ${state.arriveTime.toLocaleTimeString('ja-JP')}<br>` +
+      `📍 ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}<br>` +
+      `精度: ±${Math.round(gps.accuracy)}m`;
+
+    // 結果表示
+    const resultCard = document.getElementById('result-card');
+    resultCard.style.display = 'block';
+    document.getElementById('result-distance').textContent = state.distance + ' km';
+    document.getElementById('result-tier').textContent = tier.label;
+    document.getElementById('result-allowance').textContent =
+      tier.allowance === 0 ? '¥0（対象外）' : '¥' + tier.allowance.toLocaleString();
+
+    // 入力フォーム・送信ボタン表示
+    document.getElementById('input-section').style.display = 'block';
+    document.getElementById('btn-submit').style.display = 'block';
+
+    btn.style.display = 'none';
+    showToast('到着を記録しました', 'success');
+
+  } catch(e) {
+    btn.disabled = false;
+    showToast('GPS取得に失敗しました', 'error');
+  }
+}
+
+// ===== 記録送信 =====
+function submitRecord() {
+  const record = {
+    id: Date.now(),
+    date: state.departTime.toISOString().split('T')[0],
+    departTime: state.departTime.toISOString(),
+    arriveTime: state.arriveTime.toISOString(),
+    departGPS: state.departGPS,
+    arriveGPS: state.arriveGPS,
+    distance: state.distance,
+    tier: state.tier.label,
+    allowance: state.allowance,
+    purpose: document.getElementById('input-purpose').value.trim(),
+    person: document.getElementById('input-person').value.trim(),
+    editHistory: [],
+    submittedAt: new Date().toISOString(),
+  };
+
+  // ローカルストレージに保存（実際はサーバーへ送信）
+  const records = JSON.parse(localStorage.getItem('trip_records') || '[]');
+  records.unshift(record);
+  localStorage.setItem('trip_records', JSON.stringify(records));
+
+  showToast('記録を保存しました ✓', 'success');
+  resetState();
+  loadHistory();
+  switchTabByName('history');
+}
+
+// ===== 状態リセット =====
+function resetState() {
+  state = { phase:'idle', departTime:null, arriveTime:null, departGPS:null, arriveGPS:null, distance:null, allowance:null, tier:null };
+
+  document.getElementById('status-card').className = 'status-card idle';
+  document.getElementById('status-text').textContent = '待機中';
+  document.getElementById('status-text').className = 'status-value status-idle';
+  document.getElementById('gps-info').textContent = '出発ボタンを押して移動を開始';
+
+  document.getElementById('btn-depart').style.display = 'flex';
+  document.getElementById('btn-depart').disabled = false;
+  document.getElementById('btn-arrive').style.display = 'flex';
+  document.getElementById('btn-arrive').disabled = true;
+  document.getElementById('btn-arrive').className = 'action-btn btn-disabled-state';
+
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('input-section').style.display = 'none';
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('input-purpose').value = '';
+  document.getElementById('input-person').value = '';
+}
+
+// ===== 履歴表示 =====
+function loadHistory() {
+  const records = JSON.parse(localStorage.getItem('trip_records') || '[]');
+  const list = document.getElementById('history-list');
+
+  if (records.length === 0) {
+    list.innerHTML = '<div class="empty-state">記録はまだありません</div>';
+    return;
+  }
+
+  const now = new Date();
+  const thisMonth = records.filter(r => {
+    const d = new Date(r.date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+
+  // 月計集計
+  const totalDistance = thisMonth.reduce((s, r) => s + r.distance, 0);
+  const totalAllowance = thisMonth.reduce((s, r) => s + r.allowance, 0);
+
+  let html = `
+    <div style="background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--text2);letter-spacing:0.1em;margin-bottom:10px;">今月の合計</div>
+      <div style="display:flex;justify-content:space-between;">
+        <div>
+          <div style="font-size:11px;color:var(--text2)">移動距離</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent)">${Math.round(totalDistance*10)/10} km</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--text2)">日当合計</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--success)">¥${totalAllowance.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  thisMonth.forEach(r => {
+    const date = new Date(r.date);
+    const dateStr = date.toLocaleDateString('ja-JP', { month:'2-digit', day:'2-digit', weekday:'short' });
+    html += `
+      <div class="history-item">
+        <div class="history-date">${dateStr}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <span class="history-distance">${r.distance} km</span>
+            <span style="color:var(--text3);margin:0 8px;font-size:12px;">${r.tier}</span>
+          </div>
+          <span class="history-allowance">${r.allowance === 0 ? '対象外' : '¥'+r.allowance.toLocaleString()}</span>
+        </div>
+        ${r.purpose || r.person ? `<div class="history-purpose">${[r.purpose, r.person].filter(Boolean).join(' / ')}</div>` : ''}
+      </div>
+    `;
+  });
+
+  list.innerHTML = html;
+}
+
+// ===== タブ切替 =====
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function switchTabByName(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.textContent.includes(name === 'record' ? '記録' : '履歴')) b.classList.add('active');
+  });
+}
+
+// ===== トースト =====
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.className = 'toast ' + type, 2500);
+}
+
+// 初期化
+updateDate();
+</script>
+</body>
+</html>

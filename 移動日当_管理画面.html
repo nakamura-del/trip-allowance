@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>移動日当管理画面</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface2: #f8f9fc;
+    --border: #e2e6f0;
+    --accent: #2563eb;
+    --accent2: #7c3aed;
+    --success: #059669;
+    --danger: #dc2626;
+    --warning: #d97706;
+    --text: #1a1a2e;
+    --text2: #64748b;
+    --text3: #94a3b8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ログイン */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eff6ff, #faf5ff);
+  }
+
+  .login-box {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    width: 380px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  .login-header { text-align: center; margin-bottom: 32px; }
+  .login-icon {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 28px;
+  }
+
+  .login-title { font-size: 20px; font-weight: 700; color: var(--text); }
+  .login-sub { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  .form-label { font-size: 12px; color: var(--text2); letter-spacing: 0.05em; margin-bottom: 6px; display: block; }
+
+  .form-input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; color: var(--text); font-size: 15px;
+    outline: none; transition: border-color 0.2s; margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .form-input:focus { border-color: var(--accent); background: white; }
+
+  .btn-primary {
+    width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px; padding: 14px;
+    color: white; font-size: 15px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer; transition: opacity 0.2s; letter-spacing: 0.05em;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+
+  /* メイン */
+  #main-screen { display: none; }
+
+  .sidebar {
+    width: 240px; background: white;
+    border-right: 1px solid var(--border);
+    min-height: 100vh; padding: 24px 16px;
+    position: fixed; top: 0; left: 0;
+    display: flex; flex-direction: column;
+  }
+
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 8px; margin-bottom: 32px;
+  }
+
+  .sidebar-logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .sidebar-logo-text { font-size: 14px; font-weight: 700; color: var(--text); }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    font-size: 14px; color: var(--text2); cursor: pointer;
+    transition: all 0.15s; margin-bottom: 4px; border: none;
+    background: none; width: 100%; font-family: 'Noto Sans JP', sans-serif;
+    text-align: left;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: #eff6ff; color: var(--accent); font-weight: 700; }
+  .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+
+  .sidebar-bottom { margin-top: auto; }
+
+  .logout-btn-side {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    font-size: 14px; color: var(--danger); cursor: pointer;
+    border: none; background: none; width: 100%;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .logout-btn-side:hover { background: #fff5f5; }
+
+  .main-content { margin-left: 240px; padding: 32px; min-height: 100vh; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ヘッダー */
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-size: 22px; font-weight: 700; color: var(--text); }
+  .page-sub { font-size: 14px; color: var(--text2); margin-top: 4px; }
+
+  /* サマリーカード */
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px; margin-bottom: 28px;
+  }
+
+  .summary-card {
+    background: white; border-radius: 16px; padding: 20px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+  }
+
+  .summary-label { font-size: 12px; color: var(--text2); letter-spacing: 0.05em; margin-bottom: 8px; }
+  .summary-value { font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .summary-value.blue { color: var(--accent); }
+  .summary-value.green { color: var(--success); }
+  .summary-value.purple { color: var(--accent2); }
+
+  /* テーブルカード */
+  .table-card {
+    background: white; border-radius: 16px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    overflow: hidden; margin-bottom: 24px;
+  }
+
+  .table-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+
+  .table-title { font-size: 15px; font-weight: 700; }
+
+  .btn-sm {
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif; transition: all 0.15s;
+    border: none;
+  }
+
+  .btn-outline {
+    background: white; border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { opacity: 0.9; }
+
+  .month-selector {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .month-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border); background: white;
+    cursor: pointer; font-size: 14px; display: flex;
+    align-items: center; justify-content: center;
+  }
+
+  .month-btn:hover { border-color: var(--accent); }
+  .current-month { font-size: 14px; font-weight: 600; min-width: 80px; text-align: center; }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    background: var(--surface2); padding: 12px 16px;
+    text-align: left; font-size: 12px; font-weight: 600;
+    color: var(--text2); letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 14px 16px; font-size: 14px;
+    border-bottom: 1px solid #f0f2f8;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbff; }
+
+  .mono { font-family: 'DM Mono', monospace; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+
+  .badge-blue { background: #eff6ff; color: var(--accent); }
+  .badge-green { background: #ecfdf5; color: var(--success); }
+  .badge-gray { background: #f8fafc; color: var(--text3); }
+
+  .allowance-zero { color: var(--text3); }
+  .allowance-pos { color: var(--success); font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* 編集モーダル */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: white; border-radius: 20px; padding: 32px;
+    width: 480px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .modal-info { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+  .edit-warning {
+    background: #fffbeb; border: 1px solid #f59e0b;
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 13px; color: #92400e; margin-bottom: 20px;
+  }
+
+  .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+
+  .btn-cancel {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px; color: var(--text2);
+    font-size: 14px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .btn-save {
+    flex: 1; background: var(--accent); border: none;
+    border-radius: 10px; padding: 12px; color: white;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  /* 設定ページ */
+  .settings-card {
+    background: white; border-radius: 16px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    padding: 24px; margin-bottom: 20px;
+  }
+
+  .settings-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+
+  .tier-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px; align-items: center; margin-bottom: 12px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+
+  .tier-row:last-child { border-bottom: none; margin-bottom: 0; }
+  .tier-label-cell { font-size: 13px; color: var(--text); }
+  .tier-range { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .tier-input {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 14px;
+    font-family: 'DM Mono', monospace; color: var(--text);
+    outline: none; width: 100%;
+  }
+
+  .tier-input:focus { border-color: var(--accent); }
+
+  /* 編集履歴バッジ */
+  .edit-badge {
+    display: inline-block; background: #fff7ed;
+    border: 1px solid #fed7aa; border-radius: 4px;
+    padding: 2px 6px; font-size: 10px; color: #9a3412;
+    margin-left: 6px; vertical-align: middle;
+  }
+
+  /* レスポンシブ */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; padding: 16px; }
+  }
+
+  .empty-state {
+    text-align: center; padding: 48px; color: var(--text3); font-size: 14px;
+  }
+
+  /* トースト */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--text); color: white;
+    border-radius: 10px; padding: 12px 20px;
+    font-size: 14px; z-index: 200;
+    transform: translateY(80px); transition: transform 0.3s; opacity: 0;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- ログイン -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-header">
+      <div class="login-icon">🗂️</div>
+      <div class="login-title">管理画面</div>
+      <div class="login-sub">移動日当管理システム</div>
+    </div>
+    <label class="form-label">パスワード</label>
+    <input type="password" class="form-input" id="admin-pw" placeholder="管理者パスワード">
+    <button class="btn-primary" onclick="adminLogin()">ログイン</button>
+  </div>
+</div>
+
+<!-- メイン -->
+<div id="main-screen">
+  <!-- サイドバー -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🗂️</div>
+      <div class="sidebar-logo-text">移動日当管理</div>
+    </div>
+
+    <button class="nav-item active" onclick="showPage('dashboard', this)">
+      <span class="nav-icon">📊</span> ダッシュボード
+    </button>
+    <button class="nav-item" onclick="showPage('records', this)">
+      <span class="nav-icon">📋</span> 移動記録一覧
+    </button>
+    <button class="nav-item" onclick="showPage('monthly', this)">
+      <span class="nav-icon">📅</span> 月次集計
+    </button>
+    <button class="nav-item" onclick="showPage('settings', this)">
+      <span class="nav-icon">⚙️</span> 設定
+    </button>
+
+    <div class="sidebar-bottom">
+      <button class="logout-btn-side" onclick="adminLogout()">
+        <span class="nav-icon">🚪</span> ログアウト
+      </button>
+    </div>
+  </div>
+
+  <!-- コンテンツ -->
+  <div class="main-content">
+
+    <!-- ダッシュボード -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">ダッシュボード</div>
+        <div class="page-sub" id="dash-month-label"></div>
+      </div>
+
+      <div class="summary-grid" id="summary-grid">
+        <!-- JS生成 -->
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">直近の移動記録</div>
+        </div>
+        <div id="recent-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- 記録一覧 -->
+    <div class="page" id="page-records">
+      <div class="page-header">
+        <div class="page-title">移動記録一覧</div>
+        <div class="page-sub">目的・面談相手のみ編集可（編集履歴を記録）</div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">
+            <div class="month-selector">
+              <button class="month-btn" onclick="changeMonth(-1)">◀</button>
+              <div class="current-month" id="current-month-display"></div>
+              <button class="month-btn" onclick="changeMonth(1)">▶</button>
+            </div>
+          </div>
+          <button class="btn-sm btn-success" onclick="exportCSV()">📥 CSV出力</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>距離</th>
+                <th>区分</th>
+                <th>日当</th>
+                <th>目的</th>
+                <th>面談相手</th>
+                <th>GPS</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="records-tbody"></tbody>
+          </table>
+          <div id="records-empty" class="empty-state" style="display:none;">この月の記録はありません</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 月次集計 -->
+    <div class="page" id="page-monthly">
+      <div class="page-header">
+        <div class="page-title">月次集計</div>
+      </div>
+      <div id="monthly-content"></div>
+    </div>
+
+    <!-- 設定 -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">設定</div>
+        <div class="page-sub">距離帯・日当金額・パスワードを変更できます</div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">距離帯と日当金額</div>
+        <div class="tier-row" style="grid-template-columns:1fr 1fr;font-size:12px;color:var(--text2);padding-bottom:8px;margin-bottom:8px;">
+          <div>距離区分</div><div>日当金額（円）</div>
+        </div>
+        <div id="tier-settings"><!-- JS生成 --></div>
+        <button class="btn-sm btn-success" style="margin-top:16px;" onclick="saveTiers()">保存する</button>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">パスワード変更</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label class="form-label">記録アプリ（スマホ）</label>
+            <input type="password" class="tier-input" id="pw-mobile" placeholder="新パスワード">
+          </div>
+          <div>
+            <label class="form-label">管理画面</label>
+            <input type="password" class="tier-input" id="pw-admin" placeholder="新パスワード">
+          </div>
+        </div>
+        <button class="btn-sm btn-success" onclick="savePasswords()">パスワードを更新</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">記録を編集</div>
+    <div class="modal-info" id="modal-info"></div>
+    <div class="edit-warning">
+      ⚠️ 編集内容は履歴として記録されます。移動データ（GPS・距離・日当）は変更できません。
+    </div>
+    <div class="form-group">
+      <label class="form-label">目的</label>
+      <textarea class="form-input" id="edit-purpose" style="height:80px;resize:none;font-family:'Noto Sans JP',sans-serif;font-size:14px;"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">面談相手</label>
+      <input type="text" class="form-input" id="edit-person">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-save" onclick="saveEdit()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- トースト -->
+<div class="toast" id="admin-toast"></div>
+
+<script>
+// ===== 設定（スマホアプリと同期） =====
+let CONFIG = JSON.parse(localStorage.getItem('admin_config') || 'null') || {
+  adminPassword: 'admin5678',
+  mobilePassword: 'admin1234',
+  tiers: [
+    { min: 0,   max: 8,   label: '8km未満',           allowance: 0 },
+    { min: 8,   max: 16,  label: '8km以上16km未満',   allowance: 1000 },
+    { min: 16,  max: 50,  label: '16km以上50km未満',  allowance: 2000 },
+    { min: 50,  max: 100, label: '50km以上100km未満', allowance: 3000 },
+    { min: 100, max: 9999,label: '100km以上',         allowance: 5000 },
+  ]
+};
+
+let currentMonth = new Date();
+let editingId = null;
+
+// ===== ログイン =====
+function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === CONFIG.adminPassword) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+    renderDashboard();
+    renderTierSettings();
+    updateMonthDisplay();
+    renderRecords();
+  } else {
+    showToast('パスワードが違います', 'error');
+  }
+}
+
+document.getElementById('admin-pw').addEventListener('keypress', e => {
+  if (e.key === 'Enter') adminLogin();
+});
+
+function adminLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('admin-pw').value = '';
+}
+
+// ===== ページ切替 =====
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+
+  if (name === 'records') { updateMonthDisplay(); renderRecords(); }
+  if (name === 'monthly') renderMonthly();
+  if (name === 'dashboard') renderDashboard();
+}
+
+// ===== データ取得 =====
+function getRecords() {
+  return JSON.parse(localStorage.getItem('trip_records') || '[]');
+}
+
+function saveRecords(records) {
+  localStorage.setItem('trip_records', JSON.stringify(records));
+}
+
+function getMonthRecords(year, month) {
+  return getRecords().filter(r => {
+    const d = new Date(r.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+}
+
+// ===== ダッシュボード =====
+function renderDashboard() {
+  const now = new Date();
+  const records = getMonthRecords(now.getFullYear(), now.getMonth());
+
+  document.getElementById('dash-month-label').textContent =
+    now.toLocaleDateString('ja-JP', { year:'numeric', month:'long' }) + ' の集計';
+
+  const totalDist = Math.round(records.reduce((s, r) => s + r.distance, 0) * 10) / 10;
+  const totalAllow = records.reduce((s, r) => s + r.allowance, 0);
+  const count = records.length;
+
+  document.getElementById('summary-grid').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-label">移動回数</div>
+      <div class="summary-value blue">${count}<span style="font-size:16px;color:var(--text2);margin-left:4px;">回</span></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">総移動距離</div>
+      <div class="summary-value blue">${totalDist}<span style="font-size:16px;color:var(--text2);margin-left:4px;">km</span></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">日当合計</div>
+      <div class="summary-value green">¥${totalAllow.toLocaleString()}</div>
+    </div>
+  `;
+
+  // 直近5件
+  const recent = getRecords().slice(0, 5);
+  if (recent.length === 0) {
+    document.getElementById('recent-table-wrap').innerHTML = '<div class="empty-state">記録はまだありません</div>';
+  } else {
+    document.getElementById('recent-table-wrap').innerHTML = `
+      <table>
+        <thead><tr><th>日付</th><th>距離</th><th>日当</th><th>目的</th></tr></thead>
+        <tbody>
+          ${recent.map(r => `
+            <tr>
+              <td class="mono">${r.date}</td>
+              <td class="mono">${r.distance} km</td>
+              <td class="${r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外'}</td>
+              <td style="color:var(--text2)">${r.purpose || '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+// ===== 月切替 =====
+function updateMonthDisplay() {
+  document.getElementById('current-month-display').textContent =
+    currentMonth.toLocaleDateString('ja-JP', { year:'numeric', month:'long' });
+}
+
+function changeMonth(delta) {
+  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
+  updateMonthDisplay();
+  renderRecords();
+}
+
+// ===== 記録一覧 =====
+function renderRecords() {
+  const records = getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
+  const tbody = document.getElementById('records-tbody');
+  const empty = document.getElementById('records-empty');
+
+  if (records.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+  tbody.innerHTML = records.map(r => {
+    const hasEdit = r.editHistory && r.editHistory.length > 0;
+    const dateStr = new Date(r.date).toLocaleDateString('ja-JP', { month:'2-digit', day:'2-digit', weekday:'short' });
+    const gpsStr = r.departGPS ? `${r.departGPS.lat.toFixed(4)},${r.departGPS.lng.toFixed(4)}` : '—';
+    return `
+      <tr>
+        <td class="mono">${dateStr}</td>
+        <td class="mono">${r.distance} km</td>
+        <td><span class="badge badge-blue">${r.tier}</span></td>
+        <td class="${r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外'}</td>
+        <td>
+          ${r.purpose || '<span style="color:var(--text3)">—</span>'}
+          ${hasEdit ? '<span class="edit-badge">編集済</span>' : ''}
+        </td>
+        <td>${r.person || '<span style="color:var(--text3)">—</span>'}</td>
+        <td style="font-size:11px;color:var(--text3);font-family:\'DM Mono\',monospace;">${gpsStr}</td>
+        <td>
+          <button class="btn-sm btn-outline" onclick="openEdit(${r.id})">編集</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ===== 編集 =====
+function openEdit(id) {
+  const records = getRecords();
+  const record = records.find(r => r.id === id);
+  if (!record) return;
+
+  editingId = id;
+  document.getElementById('modal-info').innerHTML =
+    `<strong>${record.date}</strong> | ${record.distance}km | ¥${record.allowance.toLocaleString()}` +
+    (record.editHistory?.length ? `<br><span style="color:var(--warning)">編集履歴: ${record.editHistory.length}件</span>` : '');
+  document.getElementById('edit-purpose').value = record.purpose || '';
+  document.getElementById('edit-person').value = record.person || '';
+  document.getElementById('edit-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('show');
+  editingId = null;
+}
+
+function saveEdit() {
+  if (!editingId) return;
+  const records = getRecords();
+  const idx = records.findIndex(r => r.id === editingId);
+  if (idx === -1) return;
+
+  const old = records[idx];
+  const newPurpose = document.getElementById('edit-purpose').value.trim();
+  const newPerson = document.getElementById('edit-person').value.trim();
+
+  // 変更がない場合
+  if (old.purpose === newPurpose && old.person === newPerson) {
+    closeModal();
+    return;
+  }
+
+  // 編集履歴を追加
+  if (!records[idx].editHistory) records[idx].editHistory = [];
+  records[idx].editHistory.push({
+    editedAt: new Date().toISOString(),
+    before: { purpose: old.purpose, person: old.person },
+    after: { purpose: newPurpose, person: newPerson },
+  });
+
+  records[idx].purpose = newPurpose;
+  records[idx].person = newPerson;
+  saveRecords(records);
+
+  closeModal();
+  renderRecords();
+  showToast('編集を保存しました（履歴記録済）', 'success');
+}
+
+// ===== CSV出力 =====
+function exportCSV() {
+  const records = getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
+  if (records.length === 0) { showToast('データがありません', 'error'); return; }
+
+  const headers = ['日付', '出発時刻', '到着時刻', '距離(km)', '区分', '日当(円)', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時', '編集履歴'];
+
+  const rows = records.map(r => {
+    const editLog = r.editHistory?.map(e =>
+      `[${e.editedAt.substring(0,16)}] 目的:「${e.before.purpose||''}」→「${e.after.purpose||''}」 相手:「${e.before.person||''}」→「${e.after.person||''}」`
+    ).join(' / ') || '';
+
+    return [
+      r.date,
+      r.departTime ? new Date(r.departTime).toLocaleTimeString('ja-JP') : '',
+      r.arriveTime ? new Date(r.arriveTime).toLocaleTimeString('ja-JP') : '',
+      r.distance,
+      r.tier,
+      r.allowance,
+      r.purpose || '',
+      r.person || '',
+      r.departGPS?.lat || '',
+      r.departGPS?.lng || '',
+      r.arriveGPS?.lat || '',
+      r.arriveGPS?.lng || '',
+      r.submittedAt ? new Date(r.submittedAt).toLocaleString('ja-JP') : '',
+      editLog,
+    ];
+  });
+
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `移動日当_${currentMonth.getFullYear()}${String(currentMonth.getMonth()+1).padStart(2,'0')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSVを出力しました', 'success');
+}
+
+// ===== 月次集計 =====
+function renderMonthly() {
+  const records = getRecords();
+  if (records.length === 0) {
+    document.getElementById('monthly-content').innerHTML = '<div class="empty-state">記録がありません</div>';
+    return;
+  }
+
+  // 月ごとにグループ化
+  const monthMap = {};
+  records.forEach(r => {
+    const key = r.date.substring(0, 7);
+    if (!monthMap[key]) monthMap[key] = [];
+    monthMap[key].push(r);
+  });
+
+  const months = Object.keys(monthMap).sort().reverse();
+
+  let html = '';
+  months.forEach(key => {
+    const recs = monthMap[key];
+    const totalDist = Math.round(recs.reduce((s, r) => s + r.distance, 0) * 10) / 10;
+    const totalAllow = recs.reduce((s, r) => s + r.allowance, 0);
+    const [y, m] = key.split('-');
+
+    // 距離帯別集計
+    const tierSummary = {};
+    recs.forEach(r => {
+      tierSummary[r.tier] = tierSummary[r.tier] || { count: 0, allowance: 0 };
+      tierSummary[r.tier].count++;
+      tierSummary[r.tier].allowance += r.allowance;
+    });
+
+    html += `
+      <div class="table-card" style="margin-bottom:20px;">
+        <div class="table-header">
+          <div class="table-title">${y}年${m}月</div>
+          <div style="display:flex;gap:16px;font-size:14px;">
+            <span>計 <strong class="mono">${totalDist} km</strong></span>
+            <span>日当合計 <strong class="mono" style="color:var(--success)">¥${totalAllow.toLocaleString()}</strong></span>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>区分</th><th>件数</th><th>日当計</th></tr></thead>
+          <tbody>
+            ${Object.entries(tierSummary).map(([tier, data]) => `
+              <tr>
+                <td><span class="badge badge-blue">${tier}</span></td>
+                <td class="mono">${data.count}件</td>
+                <td class="${data.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${data.allowance > 0 ? '¥'+data.allowance.toLocaleString() : '対象外'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  });
+
+  document.getElementById('monthly-content').innerHTML = html;
+}
+
+// ===== 距離帯設定 =====
+function renderTierSettings() {
+  const labels = ['8km未満', '8〜16km', '16〜50km', '50〜100km', '100km以上'];
+  document.getElementById('tier-settings').innerHTML = CONFIG.tiers.map((t, i) => `
+    <div class="tier-row">
+      <div class="tier-label-cell">
+        <div>${t.label}</div>
+        <div class="tier-range">${t.min}km以上${t.max < 9000 ? t.max+'km未満' : ''}</div>
+      </div>
+      <div>
+        <input type="number" class="tier-input" id="tier-${i}" value="${t.allowance}" min="0" step="100" placeholder="0">
+      </div>
+      <div style="font-size:13px;color:var(--text2)">円</div>
+    </div>
+  `).join('');
+}
+
+function saveTiers() {
+  CONFIG.tiers.forEach((t, i) => {
+    const val = parseInt(document.getElementById('tier-' + i).value) || 0;
+    CONFIG.tiers[i].allowance = val;
+  });
+  localStorage.setItem('admin_config', JSON.stringify(CONFIG));
+  showToast('距離帯を保存しました', 'success');
+}
+
+function savePasswords() {
+  const mobile = document.getElementById('pw-mobile').value.trim();
+  const admin = document.getElementById('pw-admin').value.trim();
+  if (mobile) CONFIG.mobilePassword = mobile;
+  if (admin) CONFIG.adminPassword = admin;
+  localStorage.setItem('admin_config', JSON.stringify(CONFIG));
+  document.getElementById('pw-mobile').value = '';
+  document.getElementById('pw-admin').value = '';
+  showToast('パスワードを更新しました', 'success');
+}
+
+// ===== トースト =====
+function showToast(msg, type = '') {
+  const t = document.getElementById('admin-toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(() => t.className = 'toast ' + type, 2500);
+}
+</script>
+</body>
+</html>

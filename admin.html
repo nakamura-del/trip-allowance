@@ -446,7 +446,7 @@
     <div class="page" id="page-records">
       <div class="page-header">
         <div class="page-title">記録一覧</div>
-        <div class="page-sub">移動・宿泊記録の閲覧と編集</div>
+        <div class="page-sub">移動記録の閲覧と編集</div>
       </div>
       <div class="table-card">
         <div class="table-header">
@@ -461,11 +461,6 @@
                 <option value="">全従業員</option>
               </select>
             </span>
-            <select class="filter-select" id="filter-type" onchange="renderRecords()">
-              <option value="">全種別</option>
-              <option value="travel">移動のみ</option>
-              <option value="accommodation">宿泊のみ</option>
-            </select>
           </div>
           <button class="btn-sm btn-success" id="btn-csv-export" onclick="exportCSV()">CSV出力</button>
         </div>
@@ -475,8 +470,7 @@
               <tr>
                 <th>日付</th>
                 <th>従業員</th>
-                <th>種別</th>
-                <th>距離/ホテル</th>
+                <th>距離</th>
                 <th>区分</th>
                 <th>日当</th>
                 <th>目的</th>
@@ -591,10 +585,6 @@
       <label class="form-label">面談相手</label>
       <input type="text" class="form-input form-input-text" id="edit-person">
     </div>
-    <div class="form-group" style="margin-bottom:16px;" id="edit-hotel-group">
-      <label class="form-label">ホテル名</label>
-      <input type="text" class="form-input form-input-text" id="edit-hotel">
-    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
       <button class="btn-save" onclick="saveEdit()">保存する</button>
@@ -668,7 +658,6 @@ let CONFIG = {
         { min: 100, max: 200, label: '100km以上200km未満', allowance: 10000 },
         { min: 200, max: 9999, label: '200km以上', allowance: 20000 },
       ],
-      accommodation_allowance: 8700,
     }
   ]
 };
@@ -825,7 +814,7 @@ function renderSetupGuide() {
             <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:${step1Done ? 'var(--success)' : 'var(--text)'};">旅費規定PDFをアップロード</div>
             <div style="font-size:12px;color:var(--text2);line-height:1.6;">
               「旅費規定・設定」画面で旅費規定PDFをアップロードします。<br>
-              PDFから役職・日当・宿泊費が自動的に読み取られ、アプリに反映されます。
+              PDFから役職・日当が自動的に読み取られ、アプリに反映されます。
             </div>
             ${!step1Done ? '<button class="btn-sm btn-accent" style="margin-top:8px;" onclick="document.querySelector(\'[onclick*=settings]\').click()">設定画面へ</button>' : ''}
           </div>
@@ -875,10 +864,8 @@ async function renderDashboard() {
     now.toLocaleDateString('ja-JP', { year:'numeric', month:'long' }) + ' の集計';
 
   const travelRecs = records.filter(r => r.record_type === 'travel');
-  const accRecs = records.filter(r => r.record_type === 'accommodation');
   const totalDist = Math.round(travelRecs.reduce((s, r) => s + r.distance, 0) * 10) / 10;
   const totalTravelAllow = travelRecs.reduce((s, r) => s + r.allowance, 0);
-  const totalAccAllow = accRecs.reduce((s, r) => s + r.allowance, 0);
 
   document.getElementById('summary-grid').innerHTML = `
     <div class="summary-card">
@@ -890,20 +877,8 @@ async function renderDashboard() {
       <div class="summary-value blue">${totalDist}<span style="font-size:14px;color:var(--text2);margin-left:4px;">km</span></div>
     </div>
     <div class="summary-card">
-      <div class="summary-label">移動日当合計</div>
-      <div class="summary-value green">¥${totalTravelAllow.toLocaleString()}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">宿泊回数</div>
-      <div class="summary-value purple">${accRecs.length}<span style="font-size:14px;color:var(--text2);margin-left:4px;">泊</span></div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">宿泊日当合計</div>
-      <div class="summary-value purple">¥${totalAccAllow.toLocaleString()}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">日当総合計</div>
-      <div class="summary-value green" style="font-size:28px;">¥${(totalTravelAllow + totalAccAllow).toLocaleString()}</div>
+      <div class="summary-label">日当合計</div>
+      <div class="summary-value green" style="font-size:28px;">¥${totalTravelAllow.toLocaleString()}</div>
     </div>
   `;
 
@@ -911,14 +886,11 @@ async function renderDashboard() {
   const empMap = {};
   records.forEach(r => {
     const key = r.employee_name || '不明';
-    if (!empMap[key]) empMap[key] = { position: r.employee_position || '', trips: 0, stays: 0, travelAllow: 0, accAllow: 0, totalDist: 0 };
+    if (!empMap[key]) empMap[key] = { position: r.employee_position || '', trips: 0, travelAllow: 0, totalDist: 0 };
     if (r.record_type === 'travel') {
       empMap[key].trips++;
       empMap[key].travelAllow += r.allowance;
       empMap[key].totalDist += r.distance;
-    } else {
-      empMap[key].stays++;
-      empMap[key].accAllow += r.allowance;
     }
   });
 
@@ -928,20 +900,16 @@ async function renderDashboard() {
   } else {
     document.getElementById('person-summary-wrap').innerHTML = `
       <table>
-        <thead><tr><th>従業員</th><th>役職</th><th>移動</th><th>距離</th><th>移動日当</th><th>宿泊</th><th>宿泊日当</th><th>合計</th></tr></thead>
+        <thead><tr><th>従業員</th><th>役職</th><th>移動</th><th>距離</th><th>日当合計</th></tr></thead>
         <tbody>
           ${empNames.map(name => {
             const d = empMap[name];
-            const total = d.travelAllow + d.accAllow;
             return `<tr>
               <td style="font-weight:600">${name}</td>
               <td><span class="badge badge-purple">${d.position}</span></td>
               <td class="mono">${d.trips}回</td>
               <td class="mono">${Math.round(d.totalDist*10)/10} km</td>
-              <td class="allowance-pos">¥${d.travelAllow.toLocaleString()}</td>
-              <td class="mono">${d.stays}泊</td>
-              <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">¥${d.accAllow.toLocaleString()}</td>
-              <td class="allowance-pos" style="font-size:16px;">¥${total.toLocaleString()}</td>
+              <td class="allowance-pos" style="font-size:16px;">¥${d.travelAllow.toLocaleString()}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -960,15 +928,13 @@ async function renderDashboard() {
   } else {
     document.getElementById('recent-table-wrap').innerHTML = `
       <table>
-        <thead><tr><th>日付</th><th>従業員</th><th>種別</th><th>距離/ホテル</th><th>日当</th><th>目的</th></tr></thead>
+        <thead><tr><th>日付</th><th>従業員</th><th>距離</th><th>日当</th><th>目的</th></tr></thead>
         <tbody>
           ${recent.map(r => {
-            const isTravel = r.record_type === 'travel';
             return `<tr>
               <td class="mono">${r.date}</td>
               <td>${r.employee_name || '—'}</td>
-              <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '宿泊'}</span></td>
-              <td class="mono">${isTravel ? r.distance + ' km' : (r.hotel_name || '—')}</td>
+              <td class="mono">${r.distance} km</td>
               <td class="${r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外'}</td>
               <td style="color:var(--text2)">${r.purpose || '—'}</td>
             </tr>`;
@@ -1001,10 +967,8 @@ async function renderRecords() {
   }
 
   const empFilter = document.getElementById('filter-employee').value;
-  const typeFilter = document.getElementById('filter-type').value;
 
   if (empFilter) records = records.filter(r => r.employee_id === parseInt(empFilter));
-  if (typeFilter) records = records.filter(r => r.record_type === typeFilter);
 
   const tbody = document.getElementById('records-tbody');
   const empty = document.getElementById('records-empty');
@@ -1019,21 +983,19 @@ async function renderRecords() {
   tbody.innerHTML = records.map(r => {
     const hasEdit = r.edit_history && r.edit_history.length > 0;
     const dateStr = new Date(r.date).toLocaleDateString('ja-JP', { month:'2-digit', day:'2-digit', weekday:'short' });
-    const isTravel = r.record_type === 'travel';
     return `
       <tr>
         <td class="mono">${dateStr}</td>
         <td>${r.employee_name || '—'}<br><span style="font-size:11px;color:var(--text3)">${r.employee_position || ''}</span></td>
-        <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '宿泊'}</span></td>
-        <td class="mono">${isTravel ? r.distance + ' km' : (r.hotel_name || '—')}</td>
-        <td>${isTravel ? '<span class="badge badge-blue">' + (r.tier || '') + '</span>' : ''}</td>
+        <td class="mono">${r.distance} km</td>
+        <td><span class="badge badge-blue">${r.tier || ''}</span></td>
         <td class="${r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外'}</td>
         <td>
           ${r.purpose || '<span style="color:var(--text3)">—</span>'}
           ${hasEdit ? '<span class="edit-badge">編集済</span>' : ''}
         </td>
         <td>
-          ${currentAdmin && currentAdmin.is_admin ? `<button class="btn-sm btn-outline" onclick="openEdit(${r.id}, '${r.record_type}')">編集</button>
+          ${currentAdmin && currentAdmin.is_admin ? `<button class="btn-sm btn-outline" onclick="openEdit(${r.id})">編集</button>
           <button class="btn-sm btn-outline" id="del-btn-${r.id}" onclick="confirmDeleteRecord(${r.id})" style="color:var(--danger);border-color:var(--danger);">削除</button>` : ''}
         </td>
       </tr>
@@ -1042,23 +1004,18 @@ async function renderRecords() {
 }
 
 // ===== 編集 =====
-async function openEdit(id, type) {
+async function openEdit(id) {
   const allRecords = await getAllRecords();
   const record = allRecords.find(r => r.id === id);
   if (!record) return;
 
   editingId = id;
-  const isTravel = record.record_type === 'travel';
   document.getElementById('modal-info').innerHTML =
-    `<strong>${record.date}</strong> | ${record.employee_name || ''} | ${isTravel ? record.distance + 'km | ¥' + record.allowance.toLocaleString() : '🏨 ' + (record.hotel_name || '')}` +
+    `<strong>${record.date}</strong> | ${record.employee_name || ''} | ${record.distance}km | ¥${record.allowance.toLocaleString()}` +
     (record.edit_history?.length ? `<br><span style="color:var(--warning)">編集履歴: ${record.edit_history.length}件</span>` : '');
 
   document.getElementById('edit-purpose').value = record.purpose || '';
   document.getElementById('edit-person').value = record.person || '';
-  document.getElementById('edit-hotel').value = record.hotel_name || '';
-
-  document.getElementById('edit-person-group').style.display = isTravel ? 'block' : 'none';
-  document.getElementById('edit-hotel-group').style.display = isTravel ? 'none' : 'block';
 
   document.getElementById('edit-modal').classList.add('show');
 }
@@ -1077,17 +1034,14 @@ async function saveEdit() {
 
   const newPurpose = document.getElementById('edit-purpose').value.trim();
   const newPerson = document.getElementById('edit-person').value.trim();
-  const newHotel = document.getElementById('edit-hotel').value.trim();
 
-  const updates = { purpose: newPurpose };
-  if (old.record_type === 'travel') updates.person = newPerson;
-  if (old.record_type === 'accommodation') updates.hotel_name = newHotel;
+  const updates = { purpose: newPurpose, person: newPerson };
 
   const editHistory = old.edit_history || [];
   editHistory.push({
     editedAt: new Date().toISOString(),
-    before: { purpose: old.purpose, person: old.person, hotel_name: old.hotel_name },
-    after: { purpose: newPurpose, person: newPerson, hotel_name: newHotel },
+    before: { purpose: old.purpose, person: old.person },
+    after: { purpose: newPurpose, person: newPerson },
   });
   updates.edit_history = editHistory;
 
@@ -1165,19 +1119,17 @@ async function exportCSV() {
 
   if (records.length === 0) { showToast('データがありません', 'error'); return; }
 
-  const headers = ['日付', '従業員名', '役職', '種別', '出発時刻', '到着時刻', '距離(km)', '区分', '日当(円)', 'ホテル名', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
+  const headers = ['日付', '従業員名', '役職', '出発時刻', '到着時刻', '距離(km)', '区分', '日当(円)', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
 
   const rows = records.map(r => [
     r.date,
     r.employee_name || '',
     r.employee_position || '',
-    r.record_type === 'travel' ? '移動' : '宿泊',
     r.depart_time ? new Date(r.depart_time).toLocaleTimeString('ja-JP') : '',
     r.arrive_time ? new Date(r.arrive_time).toLocaleTimeString('ja-JP') : '',
     r.distance,
     r.tier || '',
     r.allowance,
-    r.hotel_name || '',
     r.purpose || '',
     r.person || '',
     r.depart_gps?.lat || '',
@@ -1227,24 +1179,18 @@ async function renderMonthly() {
 
     // 全社集計
     const travelRecs = recs.filter(r => r.record_type === 'travel');
-    const accRecs = recs.filter(r => r.record_type === 'accommodation');
     const totalDist = Math.round(travelRecs.reduce((s, r) => s + r.distance, 0) * 10) / 10;
     const totalTravelAllow = travelRecs.reduce((s, r) => s + r.allowance, 0);
-    const totalAccAllow = accRecs.reduce((s, r) => s + r.allowance, 0);
-    const grandTotal = totalTravelAllow + totalAccAllow;
 
     // 個人別集計
     const empMap = {};
     recs.forEach(r => {
       const name = r.employee_name || '不明';
-      if (!empMap[name]) empMap[name] = { position: r.employee_position || '', trips: 0, stays: 0, travelAllow: 0, accAllow: 0, dist: 0 };
+      if (!empMap[name]) empMap[name] = { position: r.employee_position || '', trips: 0, travelAllow: 0, dist: 0 };
       if (r.record_type === 'travel') {
         empMap[name].trips++;
         empMap[name].travelAllow += r.allowance;
         empMap[name].dist += r.distance;
-      } else {
-        empMap[name].stays++;
-        empMap[name].accAllow += r.allowance;
       }
     });
 
@@ -1254,14 +1200,11 @@ async function renderMonthly() {
           <div class="table-title">${y}年${m}月</div>
           <div style="display:flex;gap:16px;font-size:13px;flex-wrap:wrap;">
             <span>移動 <strong class="mono">${travelRecs.length}回</strong> / <strong class="mono">${totalDist}km</strong></span>
-            <span>移動日当 <strong class="mono" style="color:var(--success)">¥${totalTravelAllow.toLocaleString()}</strong></span>
-            <span>宿泊 <strong class="mono">${accRecs.length}泊</strong></span>
-            <span>宿泊日当 <strong class="mono" style="color:var(--accent2)">¥${totalAccAllow.toLocaleString()}</strong></span>
-            <span>合計 <strong class="mono" style="color:var(--success);font-size:16px;">¥${grandTotal.toLocaleString()}</strong></span>
+            <span>日当合計 <strong class="mono" style="color:var(--success);font-size:16px;">¥${totalTravelAllow.toLocaleString()}</strong></span>
           </div>
         </div>
         <table>
-          <thead><tr><th>従業員</th><th>役職</th><th>移動回数</th><th>距離</th><th>移動日当</th><th>宿泊数</th><th>宿泊日当</th><th>合計</th></tr></thead>
+          <thead><tr><th>従業員</th><th>役職</th><th>移動回数</th><th>距離</th><th>日当合計</th></tr></thead>
           <tbody>
             ${Object.entries(empMap).map(([name, d]) => `
               <tr>
@@ -1269,10 +1212,7 @@ async function renderMonthly() {
                 <td><span class="badge badge-purple">${d.position}</span></td>
                 <td class="mono">${d.trips}回</td>
                 <td class="mono">${Math.round(d.dist*10)/10} km</td>
-                <td class="allowance-pos">¥${d.travelAllow.toLocaleString()}</td>
-                <td class="mono">${d.stays}泊</td>
-                <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">¥${d.accAllow.toLocaleString()}</td>
-                <td class="allowance-pos" style="font-size:15px;">¥${(d.travelAllow + d.accAllow).toLocaleString()}</td>
+                <td class="allowance-pos" style="font-size:15px;">¥${d.travelAllow.toLocaleString()}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -1480,21 +1420,6 @@ function renderPositionRates() {
     </div>`;
   }
 
-  // Accommodation limit (第12条)
-  if (readOnly) {
-    html += `<div class="tier-row" style="background:#f5f3ff;border-radius:10px;padding:12px;margin-top:8px;">
-      <div class="tier-label-cell"><div style="color:var(--accent2);font-weight:600;">宿泊費限度額（第12条）</div><div class="tier-range">1泊あたり</div></div>
-      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2);">&yen;${(pos.accommodation_allowance || 0).toLocaleString()}</div>
-      <div></div>
-    </div>`;
-  } else {
-    html += `<div class="tier-row" style="background:#f5f3ff;border-radius:10px;padding:12px;margin-top:8px;">
-      <div class="tier-label-cell"><div style="color:var(--accent2);font-weight:600;">宿泊費限度額（第12条）</div><div class="tier-range">1泊あたり</div></div>
-      <div><input type="number" class="tier-input" id="acc-allowance" value="${pos.accommodation_allowance || 0}" min="0" step="100"></div>
-      <div style="font-size:13px;color:var(--text2)">円</div>
-    </div>`;
-  }
-
   if (readOnly) {
     html += `<div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:10px;font-size:12px;color:var(--text2);">
       ※ 金額を変更するには、旅費規定PDFを更新してアップロードしてください。
@@ -1519,7 +1444,6 @@ async function savePositionRates() {
     t.allowance = parseInt(document.getElementById('tier-' + i).value) || 0;
   });
   pos.daily_allowance = parseInt(document.getElementById('daily-allowance').value) || 0;
-  pos.accommodation_allowance = parseInt(document.getElementById('acc-allowance').value) || 0;
 
   const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('id', 1);
   if (error) { showToast('保存に失敗しました', 'error'); return; }
@@ -1537,7 +1461,6 @@ function addPosition() {
   const newPos = {
     name: '新しい役職',
     travel_tiers: base.travel_tiers.map(t => ({ ...t, allowance: 0 })),
-    accommodation_allowance: 0,
   };
   CONFIG.positions.push(newPos);
   selectedPositionIdx = CONFIG.positions.length - 1;
@@ -1653,7 +1576,6 @@ async function parsePdfFile(file) {
 function parseTravelRegulation(text) {
   const result = {
     positions: [],
-    accommodationLimits: {},
     dailyAllowances: {},
     travelTiers: []
   };
@@ -1683,12 +1605,10 @@ function parseTravelRegulation(text) {
   const sec13 = text.match(/第\s*13\s*条[\s\S]*?(?=第\s*14\s*条)/);
   const sec15 = text.match(/第\s*15\s*条[\s\S]*?(?=第\s*16\s*条)/);
 
-  if (sec12) result.accommodationLimits = extractPositionAmounts(sec12[0]);
   if (sec13) result.dailyAllowances = extractPositionAmounts(sec13[0]);
 
   // Determine positions from extracted data
   const allPositions = new Set([
-    ...Object.keys(result.accommodationLimits),
     ...Object.keys(result.dailyAllowances)
   ]);
   result.positions = positionNames.filter(p => allPositions.has(p));
@@ -1739,14 +1659,12 @@ function showPdfExtractModal(data) {
 
   if (data.positions.length > 0) {
     html += '<div class="pdf-extract-section">';
-    html += '<div class="pdf-extract-section-title">役職別 宿泊費限度額・日当（第12条・第13条）</div>';
-    html += '<table class="pdf-extract-table"><thead><tr><th>役職</th><th>宿泊費限度額</th><th>日当</th></tr></thead><tbody>';
+    html += '<div class="pdf-extract-section-title">役職別 日当（第13条）</div>';
+    html += '<table class="pdf-extract-table"><thead><tr><th>役職</th><th>日当</th></tr></thead><tbody>';
     data.positions.forEach(pos => {
-      const acc = data.accommodationLimits[pos];
       const daily = data.dailyAllowances[pos];
       html += '<tr>';
       html += '<td style="font-weight:600">' + pos + '</td>';
-      html += '<td class="mono">' + (acc != null ? '&yen;' + acc.toLocaleString() : '—') + '</td>';
       html += '<td class="mono">' + (daily != null ? '&yen;' + daily.toLocaleString() : '—') + '</td>';
       html += '</tr>';
     });
@@ -1800,7 +1718,6 @@ async function applyPdfPositions() {
   const newPositions = data.positions.map(name => ({
     name: name,
     travel_tiers: travelTiers.map(t => ({...t})),
-    accommodation_allowance: data.accommodationLimits[name] || 0,
     daily_allowance: data.dailyAllowances[name] || 0,
   }));
 

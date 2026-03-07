@@ -424,7 +424,7 @@
     <input type="text" class="form-input" id="login-id" placeholder="login_id" autocomplete="username" style="font-size:15px;">
     <label class="form-label">パスワード</label>
     <div style="position:relative;">
-      <input type="password" class="form-input" id="password-input" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px;">
+      <input type="text" class="form-input pw-mask" id="password-input" placeholder="••••••••" autocomplete="off" style="padding-right:44px;-webkit-text-security:disc;">
       <button type="button" onclick="togglePw('password-input', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:4px 8px;color:var(--text3);">👁</button>
     </div>
     <button class="btn-primary" onclick="login()">ログイン</button>
@@ -738,10 +738,20 @@ function todayStr() {
 // ===== ログイン =====
 function togglePw(id, btn) {
   const input = document.getElementById(id);
-  const isPw = input.type === 'password';
-  input.type = isPw ? 'text' : 'password';
-  btn.textContent = isPw ? '🙈' : '👁';
+  const masked = input.style.webkitTextSecurity === 'disc';
+  input.style.webkitTextSecurity = masked ? 'none' : 'disc';
+  btn.textContent = masked ? '🙈' : '👁';
 }
+
+// 入力直後の1文字を一瞬表示
+document.querySelectorAll('.pw-mask').forEach(input => {
+  let timer = null;
+  input.addEventListener('input', () => {
+    input.style.webkitTextSecurity = 'none';
+    clearTimeout(timer);
+    timer = setTimeout(() => { input.style.webkitTextSecurity = 'disc'; }, 500);
+  });
+});
 
 async function login() {
   const loginId = document.getElementById('login-id').value.trim();

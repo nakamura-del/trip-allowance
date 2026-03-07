@@ -377,7 +377,7 @@
     <input type="text" class="form-input" id="admin-login-id" placeholder="login_id" autocomplete="username">
     <label class="form-label">パスワード</label>
     <div style="position:relative;">
-      <input type="password" class="form-input" id="admin-pw" placeholder="パスワード" autocomplete="current-password" style="padding-right:44px;">
+      <input type="text" class="form-input pw-mask" id="admin-pw" placeholder="パスワード" autocomplete="off" style="padding-right:44px;-webkit-text-security:disc;">
       <button type="button" onclick="togglePw('admin-pw', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:4px 8px;color:var(--text3);">👁</button>
     </div>
     <button class="btn-primary" onclick="adminLogin()">ログイン</button>
@@ -697,10 +697,19 @@ let currentAdmin = null;
 
 function togglePw(id, btn) {
   const input = document.getElementById(id);
-  const isPw = input.type === 'password';
-  input.type = isPw ? 'text' : 'password';
-  btn.textContent = isPw ? '🙈' : '👁';
+  const masked = input.style.webkitTextSecurity === 'disc';
+  input.style.webkitTextSecurity = masked ? 'none' : 'disc';
+  btn.textContent = masked ? '🙈' : '👁';
 }
+
+document.querySelectorAll('.pw-mask').forEach(input => {
+  let timer = null;
+  input.addEventListener('input', () => {
+    input.style.webkitTextSecurity = 'none';
+    clearTimeout(timer);
+    timer = setTimeout(() => { input.style.webkitTextSecurity = 'disc'; }, 500);
+  });
+});
 
 async function adminLogin() {
   const loginId = document.getElementById('admin-login-id').value.trim();

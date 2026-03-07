@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>移動日当管理画面</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #f4f6fb;
@@ -513,8 +514,13 @@
 <div class="toast" id="admin-toast"></div>
 
 <script>
-// ===== 設定（スマホアプリと同期） =====
-let CONFIG = JSON.parse(localStorage.getItem('admin_config') || 'null') || {
+// ===== Supabase設定 =====
+const SUPABASE_URL = 'https://aeguoilgauxwincmulnc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlZ3VvaWxnYXV4d2luY211bG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjYwOTgsImV4cCI6MjA4ODQ0MjA5OH0.SQv2NS6tyenI_9IB9yHfkX_Dj3jeKiLmdBoG0PVZswY';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== 設定（Supabaseから読み込み） =====
+let CONFIG = {
   adminPassword: 'admin5678',
   mobilePassword: 'admin1234',
   tiers: [
@@ -525,12 +531,22 @@ let CONFIG = JSON.parse(localStorage.getItem('admin_config') || 'null') || {
   ]
 };
 
+async function loadConfig() {
+  const { data, error } = await db.from('app_config').select('*').eq('id', 1).single();
+  if (data) {
+    CONFIG.adminPassword = data.admin_password;
+    CONFIG.mobilePassword = data.mobile_password;
+    CONFIG.tiers = data.tiers;
+  }
+}
+
 let currentMonth = new Date();
 let editingId = null;
 
 // ===== ログイン =====
-function adminLogin() {
+async function adminLogin() {
   const pw = document.getElementById('admin-pw').value;
+  await loadConfig();
   if (pw === CONFIG.adminPassword) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'block';
@@ -566,25 +582,33 @@ function showPage(name, btn) {
 }
 
 // ===== データ取得 =====
-function getRecords() {
-  return JSON.parse(localStorage.getItem('trip_records') || '[]');
+async function getRecords() {
+  const { data, error } = await db
+    .from('trip_records')
+    .select('*')
+    .order('date', { ascending: false });
+  return data || [];
 }
 
-function saveRecords(records) {
-  localStorage.setItem('trip_records', JSON.stringify(records));
-}
+async function getMonthRecords(year, month) {
+  const startDate = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const nextMonth = month === 11
+    ? `${year+1}-01-01`
+    : `${year}-${String(month+2).padStart(2,'0')}-01`;
 
-function getMonthRecords(year, month) {
-  return getRecords().filter(r => {
-    const d = new Date(r.date);
-    return d.getFullYear() === year && d.getMonth() === month;
-  });
+  const { data, error } = await db
+    .from('trip_records')
+    .select('*')
+    .gte('date', startDate)
+    .lt('date', nextMonth)
+    .order('date', { ascending: false });
+  return data || [];
 }
 
 // ===== ダッシュボード =====
-function renderDashboard() {
+async function renderDashboard() {
   const now = new Date();
-  const records = getMonthRecords(now.getFullYear(), now.getMonth());
+  const records = await getMonthRecords(now.getFullYear(), now.getMonth());
 
   document.getElementById('dash-month-label').textContent =
     now.toLocaleDateString('ja-JP', { year:'numeric', month:'long' }) + ' の集計';
@@ -609,7 +633,8 @@ function renderDashboard() {
   `;
 
   // 直近5件
-  const recent = getRecords().slice(0, 5);
+  const allRecords = await getRecords();
+  const recent = allRecords.slice(0, 5);
   if (recent.length === 0) {
     document.getElementById('recent-table-wrap').innerHTML = '<div class="empty-state">記録はまだありません</div>';
   } else {
@@ -644,8 +669,8 @@ function changeMonth(delta) {
 }
 
 // ===== 記録一覧 =====
-function renderRecords() {
-  const records = getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
+async function renderRecords() {
+  const records = await getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
   const tbody = document.getElementById('records-tbody');
   const empty = document.getElementById('records-empty');
 
@@ -657,9 +682,9 @@ function renderRecords() {
 
   empty.style.display = 'none';
   tbody.innerHTML = records.map(r => {
-    const hasEdit = r.editHistory && r.editHistory.length > 0;
+    const hasEdit = r.edit_history && r.edit_history.length > 0;
     const dateStr = new Date(r.date).toLocaleDateString('ja-JP', { month:'2-digit', day:'2-digit', weekday:'short' });
-    const gpsStr = r.departGPS ? `${r.departGPS.lat.toFixed(4)},${r.departGPS.lng.toFixed(4)}` : '—';
+    const gpsStr = r.depart_gps ? `${r.depart_gps.lat.toFixed(4)},${r.depart_gps.lng.toFixed(4)}` : '—';
     return `
       <tr>
         <td class="mono">${dateStr}</td>
@@ -671,7 +696,7 @@ function renderRecords() {
           ${hasEdit ? '<span class="edit-badge">編集済</span>' : ''}
         </td>
         <td>${r.person || '<span style="color:var(--text3)">—</span>'}</td>
-        <td style="font-size:11px;color:var(--text3);font-family:\'DM Mono\',monospace;">${gpsStr}</td>
+        <td style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;">${gpsStr}</td>
         <td>
           <button class="btn-sm btn-outline" onclick="openEdit(${r.id})">編集</button>
         </td>
@@ -681,15 +706,15 @@ function renderRecords() {
 }
 
 // ===== 編集 =====
-function openEdit(id) {
-  const records = getRecords();
-  const record = records.find(r => r.id === id);
+async function openEdit(id) {
+  const allRecords = await getRecords();
+  const record = allRecords.find(r => r.id === id);
   if (!record) return;
 
   editingId = id;
   document.getElementById('modal-info').innerHTML =
     `<strong>${record.date}</strong> | ${record.distance}km | ¥${record.allowance.toLocaleString()}` +
-    (record.editHistory?.length ? `<br><span style="color:var(--warning)">編集履歴: ${record.editHistory.length}件</span>` : '');
+    (record.edit_history?.length ? `<br><span style="color:var(--warning)">編集履歴: ${record.edit_history.length}件</span>` : '');
   document.getElementById('edit-purpose').value = record.purpose || '';
   document.getElementById('edit-person').value = record.person || '';
   document.getElementById('edit-modal').classList.add('show');
@@ -700,33 +725,37 @@ function closeModal() {
   editingId = null;
 }
 
-function saveEdit() {
+async function saveEdit() {
   if (!editingId) return;
-  const records = getRecords();
-  const idx = records.findIndex(r => r.id === editingId);
-  if (idx === -1) return;
 
-  const old = records[idx];
+  const allRecords = await getRecords();
+  const old = allRecords.find(r => r.id === editingId);
+  if (!old) return;
+
   const newPurpose = document.getElementById('edit-purpose').value.trim();
   const newPerson = document.getElementById('edit-person').value.trim();
 
-  // 変更がない場合
   if (old.purpose === newPurpose && old.person === newPerson) {
     closeModal();
     return;
   }
 
-  // 編集履歴を追加
-  if (!records[idx].editHistory) records[idx].editHistory = [];
-  records[idx].editHistory.push({
+  const editHistory = old.edit_history || [];
+  editHistory.push({
     editedAt: new Date().toISOString(),
     before: { purpose: old.purpose, person: old.person },
     after: { purpose: newPurpose, person: newPerson },
   });
 
-  records[idx].purpose = newPurpose;
-  records[idx].person = newPerson;
-  saveRecords(records);
+  const { error } = await db
+    .from('trip_records')
+    .update({ purpose: newPurpose, person: newPerson, edit_history: editHistory })
+    .eq('id', editingId);
+
+  if (error) {
+    showToast('保存に失敗しました', 'error');
+    return;
+  }
 
   closeModal();
   renderRecords();
@@ -734,31 +763,31 @@ function saveEdit() {
 }
 
 // ===== CSV出力 =====
-function exportCSV() {
-  const records = getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
+async function exportCSV() {
+  const records = await getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
   if (records.length === 0) { showToast('データがありません', 'error'); return; }
 
   const headers = ['日付', '出発時刻', '到着時刻', '距離(km)', '区分', '日当(円)', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時', '編集履歴'];
 
   const rows = records.map(r => {
-    const editLog = r.editHistory?.map(e =>
+    const editLog = r.edit_history?.map(e =>
       `[${e.editedAt.substring(0,16)}] 目的:「${e.before.purpose||''}」→「${e.after.purpose||''}」 相手:「${e.before.person||''}」→「${e.after.person||''}」`
     ).join(' / ') || '';
 
     return [
       r.date,
-      r.departTime ? new Date(r.departTime).toLocaleTimeString('ja-JP') : '',
-      r.arriveTime ? new Date(r.arriveTime).toLocaleTimeString('ja-JP') : '',
+      r.depart_time ? new Date(r.depart_time).toLocaleTimeString('ja-JP') : '',
+      r.arrive_time ? new Date(r.arrive_time).toLocaleTimeString('ja-JP') : '',
       r.distance,
       r.tier,
       r.allowance,
       r.purpose || '',
       r.person || '',
-      r.departGPS?.lat || '',
-      r.departGPS?.lng || '',
-      r.arriveGPS?.lat || '',
-      r.arriveGPS?.lng || '',
-      r.submittedAt ? new Date(r.submittedAt).toLocaleString('ja-JP') : '',
+      r.depart_gps?.lat || '',
+      r.depart_gps?.lng || '',
+      r.arrive_gps?.lat || '',
+      r.arrive_gps?.lng || '',
+      r.submitted_at ? new Date(r.submitted_at).toLocaleString('ja-JP') : '',
       editLog,
     ];
   });
@@ -776,14 +805,13 @@ function exportCSV() {
 }
 
 // ===== 月次集計 =====
-function renderMonthly() {
-  const records = getRecords();
+async function renderMonthly() {
+  const records = await getRecords();
   if (records.length === 0) {
     document.getElementById('monthly-content').innerHTML = '<div class="empty-state">記録がありません</div>';
     return;
   }
 
-  // 月ごとにグループ化
   const monthMap = {};
   records.forEach(r => {
     const key = r.date.substring(0, 7);
@@ -800,7 +828,6 @@ function renderMonthly() {
     const totalAllow = recs.reduce((s, r) => s + r.allowance, 0);
     const [y, m] = key.split('-');
 
-    // 距離帯別集計
     const tierSummary = {};
     recs.forEach(r => {
       tierSummary[r.tier] = tierSummary[r.tier] || { count: 0, allowance: 0 };
@@ -838,7 +865,6 @@ function renderMonthly() {
 
 // ===== 距離帯設定 =====
 function renderTierSettings() {
-  const labels = ['50km未満', '50〜100km', '100〜200km', '200km以上'];
   document.getElementById('tier-settings').innerHTML = CONFIG.tiers.map((t, i) => `
     <div class="tier-row">
       <div class="tier-label-cell">
@@ -853,21 +879,47 @@ function renderTierSettings() {
   `).join('');
 }
 
-function saveTiers() {
+async function saveTiers() {
   CONFIG.tiers.forEach((t, i) => {
     const val = parseInt(document.getElementById('tier-' + i).value) || 0;
     CONFIG.tiers[i].allowance = val;
   });
-  localStorage.setItem('admin_config', JSON.stringify(CONFIG));
+
+  const { error } = await db
+    .from('app_config')
+    .update({ tiers: CONFIG.tiers })
+    .eq('id', 1);
+
+  if (error) {
+    showToast('保存に失敗しました', 'error');
+    return;
+  }
   showToast('距離帯を保存しました', 'success');
 }
 
-function savePasswords() {
+async function savePasswords() {
   const mobile = document.getElementById('pw-mobile').value.trim();
   const admin = document.getElementById('pw-admin').value.trim();
-  if (mobile) CONFIG.mobilePassword = mobile;
-  if (admin) CONFIG.adminPassword = admin;
-  localStorage.setItem('admin_config', JSON.stringify(CONFIG));
+
+  const updates = {};
+  if (mobile) { updates.mobile_password = mobile; CONFIG.mobilePassword = mobile; }
+  if (admin) { updates.admin_password = admin; CONFIG.adminPassword = admin; }
+
+  if (Object.keys(updates).length === 0) {
+    showToast('新しいパスワードを入力してください', 'error');
+    return;
+  }
+
+  const { error } = await db
+    .from('app_config')
+    .update(updates)
+    .eq('id', 1);
+
+  if (error) {
+    showToast('更新に失敗しました', 'error');
+    return;
+  }
+
   document.getElementById('pw-mobile').value = '';
   document.getElementById('pw-admin').value = '';
   showToast('パスワードを更新しました', 'success');

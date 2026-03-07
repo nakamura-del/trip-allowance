@@ -367,19 +367,19 @@
 
   /* 新幹線 */
   .shinkansen {
-    position: absolute; bottom: 16px; left: -240px;
+    position: absolute; bottom: 16px; left: -400px;
     animation: trainRun 2.5s ease-out forwards;
   }
   .train-scene.running .shinkansen {
-    left: calc(50% - 110px);
+    left: calc(50% - 190px);
     animation: trainLoop 2s linear infinite;
   }
   .train-scene.stopping .shinkansen {
     animation: trainStop 2s ease-out forwards;
   }
   @keyframes trainRun {
-    0% { left: -240px; }
-    100% { left: calc(50% - 110px); }
+    0% { left: -400px; }
+    100% { left: calc(50% - 190px); }
   }
   @keyframes trainLoop {
     0% { transform: translateX(0); }
@@ -387,9 +387,9 @@
     100% { transform: translateX(0); }
   }
   @keyframes trainStop {
-    0% { opacity: 1; left: calc(50% - 110px); }
-    60% { opacity: 1; left: calc(50% - 100px); }
-    100% { opacity: 0; left: calc(50% - 90px); }
+    0% { opacity: 1; left: calc(50% - 190px); }
+    60% { opacity: 1; left: calc(50% - 180px); }
+    100% { opacity: 0; left: calc(50% - 170px); }
   }
 
   /* 風景（流れる背景） */
@@ -469,57 +469,80 @@
           <div class="train-scene" id="scene-train">
             <div class="train-scenery"></div>
             <div class="train-rail"></div>
-            <svg class="shinkansen" width="220" height="50" viewBox="0 0 220 50">
-              <!-- === 1号車（先頭・左向きノーズ） === -->
-              <!-- ノーズ -->
-              <path d="M0,38 Q0,26 24,22 L24,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <!-- ボディ -->
-              <rect x="24" y="16" width="82" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <!-- 赤ライン -->
-              <path d="M2,30 Q2,26 24,24 L24,28 Z" fill="#c0392b"/>
-              <rect x="24" y="24" width="82" height="4" fill="#c0392b"/>
-              <!-- 窓 -->
-              <rect x="32" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="44" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="56" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="68" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="80" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="92" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <!-- ヘッドライト -->
-              <circle cx="6" cy="30" r="2.5" fill="#ffdd44" stroke="#e6c200" stroke-width="0.5"/>
-              <!-- 屋根 -->
-              <rect x="24" y="13" width="82" height="4" rx="2" fill="#e0e0e0"/>
-              <!-- 車輪 -->
-              <circle cx="36" cy="40" r="3" fill="#555"/>
-              <circle cx="56" cy="40" r="3" fill="#555"/>
-              <circle cx="86" cy="40" r="3" fill="#555"/>
+            <svg class="shinkansen" width="380" height="50" viewBox="0 0 380 50">
+              <!-- === 1号車（先頭） === -->
+              <path d="M0,38 Q0,26 20,22 L20,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <rect x="20" y="16" width="48" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <path d="M2,30 Q2,26 20,24 L20,28 Z" fill="#c0392b"/>
+              <rect x="20" y="24" width="48" height="4" fill="#c0392b"/>
+              <rect x="26" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="37" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="48" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="59" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <circle cx="5" cy="30" r="2" fill="#ffdd44" stroke="#e6c200" stroke-width="0.5"/>
+              <rect x="20" y="13" width="48" height="4" rx="2" fill="#e0e0e0"/>
+              <circle cx="30" cy="40" r="2.5" fill="#555"/>
+              <circle cx="55" cy="40" r="2.5" fill="#555"/>
 
-              <!-- === 連結部 === -->
-              <rect x="106" y="18" width="8" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+              <!-- 連結1 -->
+              <rect x="68" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
 
-              <!-- === 2号車（後尾・右向きノーズ） === -->
-              <!-- ボディ -->
-              <rect x="114" y="16" width="82" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <!-- ノーズ -->
-              <path d="M220,38 Q220,26 196,22 L196,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <!-- 赤ライン -->
-              <rect x="114" y="24" width="82" height="4" fill="#c0392b"/>
-              <path d="M218,30 Q218,26 196,24 L196,28 Z" fill="#c0392b"/>
-              <!-- 窓 -->
-              <rect x="120" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="132" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="144" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="156" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="168" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="180" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <!-- テールライト -->
-              <circle cx="214" cy="30" r="2" fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
-              <!-- 屋根 -->
-              <rect x="114" y="13" width="82" height="4" rx="2" fill="#e0e0e0"/>
-              <!-- 車輪 -->
-              <circle cx="134" cy="40" r="3" fill="#555"/>
-              <circle cx="164" cy="40" r="3" fill="#555"/>
-              <circle cx="184" cy="40" r="3" fill="#555"/>
+              <!-- === 2号車 === -->
+              <rect x="74" y="16" width="56" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <rect x="74" y="24" width="56" height="4" fill="#c0392b"/>
+              <rect x="80" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="91" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="102" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="113" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="74" y="13" width="56" height="4" rx="2" fill="#e0e0e0"/>
+              <circle cx="86" cy="40" r="2.5" fill="#555"/>
+              <circle cx="118" cy="40" r="2.5" fill="#555"/>
+
+              <!-- 連結2 -->
+              <rect x="130" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+
+              <!-- === 3号車 === -->
+              <rect x="136" y="16" width="56" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <rect x="136" y="24" width="56" height="4" fill="#c0392b"/>
+              <rect x="142" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="153" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="164" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="175" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="136" y="13" width="56" height="4" rx="2" fill="#e0e0e0"/>
+              <circle cx="148" cy="40" r="2.5" fill="#555"/>
+              <circle cx="180" cy="40" r="2.5" fill="#555"/>
+
+              <!-- 連結3 -->
+              <rect x="192" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+
+              <!-- === 4号車 === -->
+              <rect x="198" y="16" width="56" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <rect x="198" y="24" width="56" height="4" fill="#c0392b"/>
+              <rect x="204" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="215" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="226" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="237" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="198" y="13" width="56" height="4" rx="2" fill="#e0e0e0"/>
+              <circle cx="210" cy="40" r="2.5" fill="#555"/>
+              <circle cx="242" cy="40" r="2.5" fill="#555"/>
+
+              <!-- 連結4 -->
+              <rect x="254" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+
+              <!-- === 5号車（後尾） === -->
+              <rect x="260" y="16" width="48" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <path d="M380,38 Q380,26 360,22 L360,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <rect x="260" y="24" width="100" height="4" fill="#c0392b"/>
+              <path d="M378,30 Q378,26 360,24 L360,28 Z" fill="#c0392b"/>
+              <rect x="266" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="277" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="288" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="299" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <circle cx="375" cy="30" r="2" fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
+              <rect x="260" y="13" width="100" height="4" rx="2" fill="#e0e0e0"/>
+              <circle cx="272" cy="40" r="2.5" fill="#555"/>
+              <circle cx="304" cy="40" r="2.5" fill="#555"/>
+              <circle cx="350" cy="40" r="2.5" fill="#555"/>
             </svg>
           </div>
 

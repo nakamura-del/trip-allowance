@@ -225,6 +225,24 @@
     font-family: 'Noto Sans JP', sans-serif; font-size: 15px;
   }
 
+  /* 宿泊セクション */
+  .acc-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 24px; margin-bottom: 16px;
+  }
+
+  .acc-rate-display {
+    background: linear-gradient(135deg, #1a2a4a, #2a1a4a);
+    border: 1px solid var(--accent2); border-radius: 14px;
+    padding: 16px; margin-bottom: 20px; text-align: center;
+  }
+
+  .acc-rate-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .acc-rate-value {
+    font-family: 'DM Mono', monospace; font-size: 28px;
+    font-weight: 700; color: var(--accent2);
+  }
+
   .form-input-date {
     width: 100%; background: var(--bg);
     border: 1px solid var(--border); border-radius: 12px;
@@ -248,6 +266,16 @@
 
   .btn-submit:active { opacity: 0.8; transform: scale(0.98); }
 
+  .btn-acc-submit {
+    background: linear-gradient(135deg, var(--accent2), #5a3a8a);
+    border: none; border-radius: 16px; padding: 18px;
+    color: white; font-size: 17px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+    width: 100%; letter-spacing: 0.05em; transition: all 0.2s;
+  }
+
+  .btn-acc-submit:active { opacity: 0.8; transform: scale(0.98); }
+  .btn-acc-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* 履歴 */
   .history-section { margin-top: 8px; }
@@ -269,6 +297,7 @@
   }
 
   .badge-travel { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .badge-accommodation { background: rgba(123,94,167,0.15); color: var(--accent2); }
 
   /* GPS取得中 */
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -483,8 +512,14 @@
     <div class="tab-content active" id="tab-record">
       <div class="content">
 
+        <!-- 移動/宿泊 切替 -->
+        <div class="segment-control">
+          <button class="segment-btn active" onclick="switchSegment('travel', this)">🚗 移動</button>
+          <button class="segment-btn" onclick="switchSegment('accommodation', this)">🏨 宿泊</button>
+        </div>
+
         <!-- === 移動セクション === -->
-        <div id="view-travel">
+        <div class="segment-view active" id="view-travel">
 
           <div class="status-card idle" id="status-card">
             <div class="status-label">現在の状態</div>
@@ -585,6 +620,60 @@
 
         </div>
 
+        <!-- === 宿泊セクション === -->
+        <div class="segment-view" id="view-accommodation">
+
+          <div class="acc-rate-display">
+            <div class="acc-rate-label">あなたの宿泊費限度額</div>
+            <div class="acc-rate-value" id="acc-rate">¥0</div>
+          </div>
+
+          <div class="acc-card">
+            <div class="section-title">宿泊記録</div>
+
+            <!-- 単泊/連泊 切替 -->
+            <div class="segment-control" style="margin-bottom:20px;">
+              <button class="segment-btn active" onclick="switchAccType('single', this)">単泊</button>
+              <button class="segment-btn" onclick="switchAccType('multi', this)">連泊</button>
+            </div>
+
+            <!-- 単泊 -->
+            <div id="acc-single-dates">
+              <div class="form-group">
+                <label class="form-label">宿泊日</label>
+                <input type="date" class="form-input-date" id="acc-date">
+              </div>
+            </div>
+
+            <!-- 連泊 -->
+            <div id="acc-multi-dates" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">チェックイン日</label>
+                <input type="date" class="form-input-date" id="acc-date-from">
+              </div>
+              <div class="form-group">
+                <label class="form-label">チェックアウト日</label>
+                <input type="date" class="form-input-date" id="acc-date-to">
+              </div>
+              <div id="acc-nights-info" style="font-size:13px;color:var(--accent2);text-align:center;margin-bottom:16px;"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">ホテル名</label>
+              <input type="text" class="form-input" id="acc-hotel" placeholder="例）〇〇ホテル" style="font-family:'Noto Sans JP',sans-serif;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">備考（任意）</label>
+              <textarea class="form-input" id="acc-note" placeholder="例）〇〇プロジェクト出張" style="font-family:'Noto Sans JP',sans-serif;height:60px;resize:none;"></textarea>
+            </div>
+          </div>
+
+          <button class="btn-acc-submit" onclick="submitAccommodation()">
+            🏨 宿泊を記録する
+          </button>
+
+        </div>
+
       </div>
     </div>
 
@@ -646,6 +735,11 @@ function getTravelTier(km) {
   return pos.travel_tiers.find(t => km >= t.min && km < t.max) || pos.travel_tiers[pos.travel_tiers.length - 1];
 }
 
+function getAccommodationAllowance() {
+  const pos = getPositionConfig();
+  return pos ? pos.accommodation_allowance || 0 : 0;
+}
+
 // ===== 状態管理 =====
 let state = {
   phase: 'idle',
@@ -701,6 +795,11 @@ async function login() {
   document.getElementById('user-name').textContent = data.name;
   document.getElementById('user-position').textContent = data.position;
 
+  // 宿泊日当の表示更新
+  const accRate = getAccommodationAllowance();
+  document.getElementById('acc-rate').textContent = '¥' + accRate.toLocaleString();
+  document.getElementById('acc-date').value = todayStr();
+
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-screen').style.display = 'flex';
   document.getElementById('main-screen').style.flexDirection = 'column';
@@ -726,6 +825,13 @@ function logout() {
 }
 
 // ===== セグメント切替 =====
+function switchSegment(name, btn) {
+  document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.segment-view').forEach(v => v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-' + name).classList.add('active');
+}
+
 // ===== GPS取得 =====
 function getGPS() {
   return new Promise((resolve, reject) => {
@@ -881,6 +987,112 @@ async function submitRecord() {
   switchTabByName('history');
 }
 
+// ===== 宿泊タイプ切替 =====
+let accType = 'single';
+
+function switchAccType(type, btn) {
+  accType = type;
+  document.querySelectorAll('#view-accommodation .segment-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('acc-single-dates').style.display = type === 'single' ? 'block' : 'none';
+  document.getElementById('acc-multi-dates').style.display = type === 'multi' ? 'block' : 'none';
+  updateNightsInfo();
+}
+
+function updateNightsInfo() {
+  const from = document.getElementById('acc-date-from').value;
+  const to = document.getElementById('acc-date-to').value;
+  const info = document.getElementById('acc-nights-info');
+  if (from && to) {
+    const nights = Math.round((new Date(to) - new Date(from)) / 86400000);
+    if (nights > 0) {
+      const allowance = getAccommodationAllowance();
+      info.textContent = nights + '泊 → ¥' + (allowance * nights).toLocaleString();
+    } else {
+      info.textContent = 'チェックアウト日はチェックイン日より後にしてください';
+      info.style.color = 'var(--danger)';
+      return;
+    }
+  } else {
+    info.textContent = '';
+  }
+  info.style.color = 'var(--accent2)';
+}
+
+// ===== 宿泊記録送信 =====
+async function submitAccommodation() {
+  const hotelName = document.getElementById('acc-hotel').value.trim();
+  const note = document.getElementById('acc-note').value.trim();
+
+  if (!hotelName) {
+    showToast('ホテル名を入力してください', 'error');
+    return;
+  }
+
+  // 宿泊日リストを作成
+  let dates = [];
+  if (accType === 'single') {
+    const date = document.getElementById('acc-date').value;
+    if (!date) { showToast('宿泊日を選択してください', 'error'); return; }
+    dates = [date];
+  } else {
+    const from = document.getElementById('acc-date-from').value;
+    const to = document.getElementById('acc-date-to').value;
+    if (!from || !to) { showToast('チェックイン日とチェックアウト日を選択してください', 'error'); return; }
+    const nights = Math.round((new Date(to) - new Date(from)) / 86400000);
+    if (nights <= 0) { showToast('チェックアウト日はチェックイン日より後にしてください', 'error'); return; }
+    for (let i = 0; i < nights; i++) {
+      const d = new Date(from);
+      d.setDate(d.getDate() + i);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+  }
+
+  const btn = document.querySelector('.btn-acc-submit');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  const allowance = getAccommodationAllowance();
+  const now = new Date().toISOString();
+
+  const records = dates.map((date, i) => ({
+    id: Date.now() + i,
+    employee_id: currentEmployee.id,
+    employee_name: currentEmployee.name,
+    employee_position: currentEmployee.position,
+    record_type: 'accommodation',
+    date: date,
+    distance: 0,
+    allowance: allowance,
+    hotel_name: hotelName,
+    purpose: note,
+    person: '',
+    edit_history: [],
+    submitted_at: now,
+  }));
+
+  const { error } = await db.from('trip_records').insert(records);
+
+  btn.disabled = false;
+  btn.textContent = '🏨 宿泊を記録する';
+
+  if (error) {
+    showToast('保存に失敗しました', 'error');
+    return;
+  }
+
+  const msg = dates.length > 1 ? dates.length + '泊分の宿泊記録を保存しました' : '宿泊記録を保存しました';
+  showToast(msg, 'success');
+  document.getElementById('acc-hotel').value = '';
+  document.getElementById('acc-note').value = '';
+  document.getElementById('acc-date').value = todayStr();
+  document.getElementById('acc-date-from').value = '';
+  document.getElementById('acc-date-to').value = '';
+  document.getElementById('acc-nights-info').textContent = '';
+  loadHistory();
+  switchTabByName('history');
+}
+
 // ===== 出発取り消し =====
 function cancelTrip() {
   if (state.phase !== 'traveling') return;
@@ -942,8 +1154,10 @@ async function loadHistory() {
   }
 
   const travelRecords = records.filter(r => r.record_type === 'travel');
+  const accRecords = records.filter(r => r.record_type === 'accommodation');
   const totalDistance = travelRecords.reduce((s, r) => s + r.distance, 0);
   const totalTravelAllow = travelRecords.reduce((s, r) => s + r.allowance, 0);
+  const totalAccAllow = accRecords.reduce((s, r) => s + r.allowance, 0);
 
   let html = `
     <div style="background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:16px;margin-bottom:16px;">
@@ -957,24 +1171,39 @@ async function loadHistory() {
           <div style="font-size:10px;color:var(--text2)">移動日当</div>
           <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--success)">¥${totalTravelAllow.toLocaleString()}</div>
         </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2)">宿泊回数</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent2)">${accRecords.length} 泊</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2)">宿泊日当</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--success)">¥${totalAccAllow.toLocaleString()}</div>
+        </div>
       </div>
       <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;display:flex;justify-content:space-between;">
         <div style="font-size:12px;color:var(--text2)">日当合計</div>
-        <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--success)">¥${totalTravelAllow.toLocaleString()}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--success)">¥${(totalTravelAllow + totalAccAllow).toLocaleString()}</div>
       </div>
     </div>
   `;
 
-  travelRecords.forEach(r => {
+  records.forEach(r => {
     const date = new Date(r.date);
     const dateStr = date.toLocaleDateString('ja-JP', { month:'2-digit', day:'2-digit', weekday:'short' });
+    const isTravel = r.record_type === 'travel';
 
     html += `
       <div class="history-item">
-        <div class="history-date">${dateStr}</div>
+        <div class="history-date">
+          <span class="record-type-badge ${isTravel ? 'badge-travel' : 'badge-accommodation'}">${isTravel ? '移動' : '宿泊'}</span>
+          ${dateStr}
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <span class="history-distance">${r.distance} km</span><span style="color:var(--text3);margin:0 8px;font-size:12px;">${r.tier}</span>
+            ${isTravel
+              ? `<span class="history-distance">${r.distance} km</span><span style="color:var(--text3);margin:0 8px;font-size:12px;">${r.tier}</span>`
+              : `<span style="font-size:14px;color:var(--accent2);">🏨 ${r.hotel_name || ''}</span>`
+            }
           </div>
           <span class="history-allowance">${r.allowance === 0 ? '対象外' : '¥'+r.allowance.toLocaleString()}</span>
         </div>

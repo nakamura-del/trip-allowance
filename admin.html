@@ -510,6 +510,29 @@
       </div>
 
       <div class="settings-card">
+        <div class="settings-title">旅費規定PDF</div>
+        <div id="pdf-upload-area" style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;" onclick="document.getElementById('pdf-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='#eff6ff'" ondragleave="this.style.borderColor='var(--border)';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='';handlePdfDrop(event)">
+          <div style="font-size:32px;margin-bottom:8px;">📄</div>
+          <div style="font-size:14px;color:var(--text2);">クリックまたはドラッグ&ドロップでPDFをアップロード</div>
+          <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;" onchange="uploadPdf(this.files[0])">
+        </div>
+        <div id="pdf-current" style="display:none;background:var(--surface2);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:24px;">📄</span>
+            <div>
+              <div id="pdf-filename" style="font-size:14px;font-weight:600;"></div>
+              <div id="pdf-uploaded-at" style="font-size:11px;color:var(--text3);"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sm btn-outline" onclick="viewPdf()">閲覧</button>
+            <button class="btn-sm btn-danger" onclick="deletePdf()">削除</button>
+          </div>
+        </div>
+        <div id="pdf-uploading" style="display:none;text-align:center;padding:16px;color:var(--accent);">アップロード中...</div>
+      </div>
+
+      <div class="settings-card">
         <div class="settings-title">管理画面パスワード</div>
         <div style="max-width:300px;">
           <input type="password" class="tier-input" id="pw-admin" placeholder="新しいパスワード" style="margin-bottom:12px;">
@@ -663,7 +686,7 @@ function showPage(name, btn) {
   if (name === 'records') { updateMonthDisplay(); renderRecords(); }
   if (name === 'monthly') renderMonthly();
   if (name === 'employees') renderEmployees();
-  if (name === 'settings') renderSettings();
+  if (name === 'settings') { renderSettings(); loadPdfInfo(); }
 }
 
 // ===== フィルタ =====
@@ -1263,6 +1286,79 @@ async function removePosition(idx) {
 
   showToast('役職を削除しました', 'success');
   renderSettings();
+}
+
+// ===== 旅費規定PDF =====
+async function loadPdfInfo() {
+  const { data } = await db.from('app_config').select('pdf_filename, pdf_uploaded_at').eq('id', 1).single();
+  const uploadArea = document.getElementById('pdf-upload-area');
+  const currentArea = document.getElementById('pdf-current');
+
+  if (data && data.pdf_filename) {
+    uploadArea.style.display = 'none';
+    currentArea.style.display = 'flex';
+    document.getElementById('pdf-filename').textContent = data.pdf_filename;
+    document.getElementById('pdf-uploaded-at').textContent = 'アップロード: ' + new Date(data.pdf_uploaded_at).toLocaleString('ja-JP');
+  } else {
+    uploadArea.style.display = 'block';
+    currentArea.style.display = 'none';
+  }
+}
+
+function handlePdfDrop(e) {
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') uploadPdf(file);
+  else showToast('PDFファイルを選択してください', 'error');
+}
+
+async function uploadPdf(file) {
+  if (!file) return;
+  if (file.type !== 'application/pdf') {
+    showToast('PDFファイルを選択してください', 'error');
+    return;
+  }
+
+  document.getElementById('pdf-upload-area').style.display = 'none';
+  document.getElementById('pdf-uploading').style.display = 'block';
+
+  const path = 'travel-regulation.pdf';
+  const { error: uploadErr } = await db.storage.from('documents').upload(path, file, { upsert: true });
+
+  if (uploadErr) {
+    document.getElementById('pdf-upload-area').style.display = 'block';
+    document.getElementById('pdf-uploading').style.display = 'none';
+    showToast('アップロード失敗: ' + uploadErr.message, 'error');
+    return;
+  }
+
+  await db.from('app_config').update({
+    pdf_filename: file.name,
+    pdf_uploaded_at: new Date().toISOString()
+  }).eq('id', 1);
+
+  document.getElementById('pdf-uploading').style.display = 'none';
+  document.getElementById('pdf-file-input').value = '';
+  showToast('旅費規定PDFをアップロードしました', 'success');
+  loadPdfInfo();
+}
+
+async function viewPdf() {
+  const { data } = await db.storage.from('documents').createSignedUrl('travel-regulation.pdf', 300);
+  if (data && data.signedUrl) {
+    window.open(data.signedUrl, '_blank');
+  } else {
+    showToast('PDFの取得に失敗しました', 'error');
+  }
+}
+
+async function deletePdf() {
+  if (!confirm('旅費規定PDFを削除しますか？')) return;
+
+  await db.storage.from('documents').remove(['travel-regulation.pdf']);
+  await db.from('app_config').update({ pdf_filename: null, pdf_uploaded_at: null }).eq('id', 1);
+
+  showToast('PDFを削除しました', 'success');
+  loadPdfInfo();
 }
 
 // ===== 管理パスワード =====

@@ -337,139 +337,75 @@
 
   .empty-state { text-align: center; padding: 48px 24px; color: var(--text3); font-size: 14px; }
 
-  /* === 8-bit ピクセルアニメーション === */
-  .pixel-scene {
-    display: none; position: relative; height: 120px; margin: 16px 0;
-    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 60%, #1a3a2a 60%, #1a3a2a 100%);
+  /* === 新幹線アニメーション === */
+  .train-scene {
+    display: none; position: relative; height: 100px; margin: 16px 0;
+    background: linear-gradient(180deg, #0d1b2a 0%, #1b2838 70%, #2a2a2a 70%, #2a2a2a 100%);
     border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
-    image-rendering: pixelated;
   }
-  .pixel-scene.active { display: block; }
+  .train-scene.active { display: block; }
 
-  /* 道路 */
-  .pixel-road {
-    position: absolute; bottom: 16px; left: 0; right: 0; height: 12px;
-    background: #333; border-top: 2px solid #555; border-bottom: 2px solid #555;
+  /* レール */
+  .train-rail {
+    position: absolute; bottom: 12px; left: 0; right: 0; height: 4px;
+    background: #888;
   }
-  .pixel-road::after {
+  .train-rail::after {
     content: ''; position: absolute; top: 4px; left: 0; right: 0; height: 2px;
-    background: repeating-linear-gradient(90deg, #ffcc00 0, #ffcc00 12px, transparent 12px, transparent 24px);
+    background: repeating-linear-gradient(90deg, #666 0, #666 20px, transparent 20px, transparent 30px);
+    animation: railScroll 0.4s linear infinite;
+  }
+  .train-scene.stopping .train-rail::after {
+    animation: railScroll 2s linear infinite;
+  }
+  @keyframes railScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-30px); }
   }
 
-  /* 歩くサラリーマン */
-  .pixel-man {
-    position: absolute; bottom: 28px; left: 20px; width: 16px; height: 28px;
-    animation: pixelWalk 4s linear infinite;
+  /* 新幹線 */
+  .shinkansen {
+    position: absolute; bottom: 16px; left: -160px;
+    animation: trainRun 3s ease-in forwards;
   }
-  @keyframes pixelWalk {
-    0% { left: -20px; }
-    100% { left: calc(100% + 20px); }
+  .train-scene.running .shinkansen {
+    left: 30%;
+    animation: trainLoop 2.5s linear infinite;
   }
-  /* 頭 */
-  .pixel-man::before {
-    content: ''; position: absolute; top: 0; left: 2px;
-    width: 12px; height: 10px; background: #ffd8a8; border-radius: 2px;
+  .train-scene.stopping .shinkansen {
+    animation: trainStop 2s ease-out forwards;
   }
-  /* 体 */
-  .pixel-man::after {
-    content: ''; position: absolute; top: 10px; left: 0;
-    width: 16px; height: 18px; background: #2d4a7a;
+  @keyframes trainRun {
+    0% { left: -160px; opacity: 1; }
+    100% { left: 30%; opacity: 1; }
   }
-  /* 足の動き */
-  .pixel-legs {
-    position: absolute; bottom: 0; left: 2px; width: 12px; height: 6px;
+  @keyframes trainLoop {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(8px); }
+    100% { transform: translateX(0); }
   }
-  .pixel-leg-l, .pixel-leg-r {
-    position: absolute; bottom: 0; width: 4px; height: 6px; background: #333;
-  }
-  .pixel-leg-l { left: 0; animation: legL 0.4s steps(2) infinite; }
-  .pixel-leg-r { right: 0; animation: legR 0.4s steps(2) infinite; }
-  @keyframes legL { 0% { height: 6px; } 50% { height: 3px; } 100% { height: 6px; } }
-  @keyframes legR { 0% { height: 3px; } 50% { height: 6px; } 100% { height: 3px; } }
-
-  /* 鞄 */
-  .pixel-bag {
-    position: absolute; top: 12px; right: -4px; width: 6px; height: 8px;
-    background: #8b4513; border: 1px solid #5a2d0c;
+  @keyframes trainStop {
+    0% { opacity: 1; }
+    70% { opacity: 1; left: 30%; }
+    100% { opacity: 0; left: 35%; }
   }
 
-  /* 星 */
-  .pixel-star {
-    position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 0;
-    animation: twinkle 2s steps(2) infinite;
+  /* 風景（流れる背景） */
+  .train-scenery {
+    position: absolute; bottom: 16px; left: 0; right: 0; height: 50px;
+    background: repeating-linear-gradient(90deg,
+      transparent 0, transparent 80px,
+      rgba(74,144,226,0.08) 80px, rgba(74,144,226,0.08) 82px
+    );
+    animation: sceneryFlow 1.5s linear infinite;
   }
-  @keyframes twinkle { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
-
-  /* === 到着シーン：家 === */
-  .pixel-house {
-    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-    width: 48px; height: 40px;
+  .train-scene.stopping .train-scenery {
+    animation: sceneryFlow 6s linear infinite;
   }
-  /* 屋根 */
-  .pixel-roof {
-    width: 0; height: 0; border-left: 28px solid transparent;
-    border-right: 28px solid transparent; border-bottom: 16px solid #c0392b;
-    position: absolute; top: 0; left: -4px;
+  @keyframes sceneryFlow {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-82px); }
   }
-  /* 壁 */
-  .pixel-wall {
-    position: absolute; top: 16px; left: 4px; width: 40px; height: 24px;
-    background: #e8c170; border: 2px solid #b8941a;
-  }
-  /* ドア */
-  .pixel-door {
-    position: absolute; bottom: 0; left: 14px; width: 12px; height: 16px;
-    background: #8b4513; border: 1px solid #5a2d0c;
-  }
-  .pixel-door::after {
-    content: ''; position: absolute; top: 6px; right: 2px;
-    width: 3px; height: 3px; background: #ffd700; border-radius: 50%;
-  }
-  /* 窓 */
-  .pixel-window {
-    position: absolute; top: 20px; width: 8px; height: 8px;
-    background: #87ceeb; border: 1px solid #b8941a;
-  }
-  .pixel-window.left { left: 8px; }
-  .pixel-window.right { right: 8px; }
-  /* 煙突 */
-  .pixel-chimney {
-    position: absolute; top: -4px; right: 8px; width: 8px; height: 12px;
-    background: #7f4030; border: 1px solid #5a2d0c;
-  }
-  /* 煙 */
-  .pixel-smoke {
-    position: absolute; width: 6px; height: 6px; background: rgba(200,200,200,0.6);
-    border-radius: 0; top: -8px; left: 1px;
-    animation: smokeRise 2s steps(8) infinite;
-  }
-  .pixel-smoke:nth-child(2) {
-    animation-delay: 0.7s; left: 3px;
-  }
-  .pixel-smoke:nth-child(3) {
-    animation-delay: 1.4s; left: -1px;
-  }
-  @keyframes smokeRise {
-    0% { transform: translateY(0) scale(1); opacity: 0.8; }
-    50% { transform: translateY(-16px) scale(1.5); opacity: 0.4; }
-    100% { transform: translateY(-32px) scale(2); opacity: 0; }
-  }
-
-  /* 到着マン（家の横に立つ） */
-  .pixel-man-arrived {
-    position: absolute; bottom: 28px; left: calc(50% + 36px);
-    width: 16px; height: 28px;
-  }
-  .pixel-man-arrived::before {
-    content: ''; position: absolute; top: 0; left: 2px;
-    width: 12px; height: 10px; background: #ffd8a8; border-radius: 2px;
-  }
-  .pixel-man-arrived::after {
-    content: ''; position: absolute; top: 10px; left: 0;
-    width: 16px; height: 18px; background: #2d4a7a;
-  }
-  .pixel-man-arrived .pixel-legs .pixel-leg-l,
-  .pixel-man-arrived .pixel-legs .pixel-leg-r { animation: none; height: 6px; }
 </style>
 </head>
 <body>
@@ -527,48 +463,36 @@
             <div class="gps-info" id="gps-info">出発ボタンを押して移動を開始</div>
           </div>
 
-          <!-- 8-bit 移動中シーン -->
-          <div class="pixel-scene" id="scene-traveling">
-            <div class="pixel-star" style="top:8px;left:15%;"></div>
-            <div class="pixel-star" style="top:16px;left:45%;animation-delay:0.5s;"></div>
-            <div class="pixel-star" style="top:6px;left:70%;animation-delay:1.2s;"></div>
-            <div class="pixel-star" style="top:20px;left:85%;animation-delay:0.8s;"></div>
-            <div class="pixel-star" style="top:12px;left:30%;animation-delay:1.5s;"></div>
-            <div class="pixel-road"></div>
-            <div class="pixel-man">
-              <div class="pixel-bag"></div>
-              <div class="pixel-legs">
-                <div class="pixel-leg-l"></div>
-                <div class="pixel-leg-r"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 8-bit 到着シーン -->
-          <div class="pixel-scene" id="scene-arrived">
-            <div class="pixel-star" style="top:8px;left:20%;"></div>
-            <div class="pixel-star" style="top:14px;left:55%;animation-delay:0.7s;"></div>
-            <div class="pixel-star" style="top:6px;left:80%;animation-delay:1s;"></div>
-            <div class="pixel-road"></div>
-            <div class="pixel-house">
-              <div class="pixel-chimney">
-                <div class="pixel-smoke"></div>
-                <div class="pixel-smoke"></div>
-                <div class="pixel-smoke"></div>
-              </div>
-              <div class="pixel-roof"></div>
-              <div class="pixel-wall">
-                <div class="pixel-window left"></div>
-                <div class="pixel-window right"></div>
-                <div class="pixel-door"></div>
-              </div>
-            </div>
-            <div class="pixel-man-arrived">
-              <div class="pixel-legs">
-                <div class="pixel-leg-l"></div>
-                <div class="pixel-leg-r"></div>
-              </div>
-            </div>
+          <!-- 新幹線アニメーション -->
+          <div class="train-scene" id="scene-train">
+            <div class="train-scenery"></div>
+            <div class="train-rail"></div>
+            <svg class="shinkansen" width="140" height="50" viewBox="0 0 140 50">
+              <!-- 先頭ノーズ -->
+              <path d="M0,38 Q0,28 20,25 L20,38 Z" fill="#e8e8e8" stroke="#ccc" stroke-width="0.5"/>
+              <!-- ボディ -->
+              <rect x="20" y="18" width="110" height="20" rx="3" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <!-- 青ライン -->
+              <rect x="0" y="30" width="20" height="4" rx="1" fill="#0066cc"/>
+              <rect x="20" y="30" width="110" height="4" fill="#0066cc"/>
+              <!-- 窓 -->
+              <rect x="30" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
+              <rect x="44" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
+              <rect x="58" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
+              <rect x="72" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
+              <rect x="86" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
+              <rect x="100" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
+              <rect x="114" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
+              <!-- 先頭ライト -->
+              <circle cx="6" cy="30" r="2" fill="#ffdd44"/>
+              <!-- 車輪 -->
+              <circle cx="35" cy="40" r="3" fill="#555"/>
+              <circle cx="55" cy="40" r="3" fill="#555"/>
+              <circle cx="95" cy="40" r="3" fill="#555"/>
+              <circle cx="115" cy="40" r="3" fill="#555"/>
+              <!-- 屋根 -->
+              <rect x="20" y="15" width="110" height="4" rx="2" fill="#ddd"/>
+            </svg>
           </div>
 
           <button class="action-btn btn-depart" id="btn-depart" onclick="depart()">
@@ -886,8 +810,10 @@ async function depart() {
     btnArrive.className = 'action-btn btn-arrive';
     btn.style.display = 'none';
     document.getElementById('btn-cancel').style.display = 'block';
-    document.getElementById('scene-traveling').classList.add('active');
-    document.getElementById('scene-arrived').classList.remove('active');
+    const trainEl = document.getElementById('scene-train');
+    trainEl.classList.add('active');
+    trainEl.classList.remove('stopping');
+    setTimeout(() => trainEl.classList.add('running'), 3000);
     showToast('出発を記録しました', 'success');
 
   } catch(e) {
@@ -920,8 +846,10 @@ async function arrive() {
     state.allowance = tier.allowance;
 
     document.getElementById('status-card').className = 'status-card done';
-    document.getElementById('scene-traveling').classList.remove('active');
-    document.getElementById('scene-arrived').classList.add('active');
+    const trainEl = document.getElementById('scene-train');
+    trainEl.classList.remove('running');
+    trainEl.classList.add('stopping');
+    setTimeout(() => { trainEl.classList.remove('active', 'stopping'); }, 2500);
     document.getElementById('status-text').textContent = '到着完了';
     document.getElementById('status-text').className = 'status-value status-complete';
     document.getElementById('gps-info').innerHTML =
@@ -1115,8 +1043,8 @@ function resetState() {
   document.getElementById('btn-arrive').disabled = true;
   document.getElementById('btn-arrive').className = 'action-btn btn-disabled-state';
   document.getElementById('btn-cancel').style.display = 'none';
-  document.getElementById('scene-traveling').classList.remove('active');
-  document.getElementById('scene-arrived').classList.remove('active');
+  const trainEl = document.getElementById('scene-train');
+  trainEl.classList.remove('active', 'running', 'stopping');
 
   document.getElementById('result-card').style.display = 'none';
   document.getElementById('input-section').style.display = 'none';

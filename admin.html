@@ -376,7 +376,10 @@
     <label class="form-label">ログインID</label>
     <input type="text" class="form-input" id="admin-login-id" placeholder="login_id" autocomplete="username">
     <label class="form-label">パスワード</label>
-    <input type="password" class="form-input" id="admin-pw" placeholder="パスワード" autocomplete="current-password">
+    <div style="position:relative;">
+      <input type="password" class="form-input" id="admin-pw" placeholder="パスワード" autocomplete="current-password" style="padding-right:44px;">
+      <button type="button" onclick="togglePw('admin-pw', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:4px 8px;color:var(--text3);">👁</button>
+    </div>
     <button class="btn-primary" onclick="adminLogin()">ログイン</button>
   </div>
 </div>
@@ -692,6 +695,13 @@ async function loadEmployees() {
 
 // ===== ログイン =====
 let currentAdmin = null;
+
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  const isPw = input.type === 'password';
+  input.type = isPw ? 'text' : 'password';
+  btn.textContent = isPw ? '🙈' : '👁';
+}
 
 async function adminLogin() {
   const loginId = document.getElementById('admin-login-id').value.trim();

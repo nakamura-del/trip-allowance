@@ -10,18 +10,18 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a26;
-    --border: #2a2a40;
-    --accent: #4f8ef7;
+    --bg: #f5f5f8;
+    --surface: #ffffff;
+    --surface2: #eeeef2;
+    --border: #dddde4;
+    --accent: #c0392b;
     --accent2: #7b5ea7;
-    --success: #2dd4a0;
-    --danger: #f75f5f;
-    --warning: #f7b84f;
-    --text: #e8e8f0;
-    --text2: #8888aa;
-    --text3: #4a4a6a;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --text: #2c3e50;
+    --text2: #7f8c8d;
+    --text3: #bdc3c7;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -41,24 +41,23 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     padding: 32px 24px;
-    background: radial-gradient(ellipse at 50% 0%, #1a1a3a 0%, var(--bg) 70%);
+    background: linear-gradient(180deg, #fff 0%, var(--bg) 100%);
   }
 
   .logo-area { text-align: center; margin-bottom: 48px; }
 
   .logo-icon {
     width: 72px; height: 72px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    background: linear-gradient(135deg, var(--accent), #e74c3c);
     border-radius: 20px;
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 16px; font-size: 32px;
-    box-shadow: 0 0 40px rgba(79,142,247,0.3);
+    box-shadow: 0 4px 20px rgba(192,57,43,0.25);
   }
 
   .logo-title {
     font-size: 22px; font-weight: 700; letter-spacing: 0.05em;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    color: var(--accent); font-weight: 700;
   }
 
   .logo-sub { font-size: 12px; color: var(--text2); margin-top: 4px; letter-spacing: 0.1em; }
@@ -72,10 +71,10 @@
   .form-label { font-size: 12px; color: var(--text2); letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
 
   .form-input {
-    width: 100%; background: var(--bg);
+    width: 100%; background: #fff;
     border: 1px solid var(--border); border-radius: 12px;
     padding: 14px 16px; color: var(--text); font-size: 16px;
-    font-family: 'DM Mono', monospace; outline: none;
+    font-family: 'Noto Sans JP', sans-serif; outline: none;
     transition: border-color 0.2s; margin-bottom: 20px;
   }
 
@@ -83,12 +82,13 @@
 
   .btn-primary {
     width: 100%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    background: var(--accent);
     border: none; border-radius: 14px; padding: 16px;
     color: white; font-size: 16px; font-weight: 700;
     font-family: 'Noto Sans JP', sans-serif;
     cursor: pointer; transition: opacity 0.2s, transform 0.1s;
     letter-spacing: 0.05em;
+    box-shadow: 0 4px 12px rgba(192,57,43,0.3);
   }
 
   .btn-primary:active { opacity: 0.8; transform: scale(0.98); }
@@ -105,7 +105,7 @@
 
   .top-bar-user { font-size: 15px; font-weight: 700; letter-spacing: 0.05em; }
   .top-bar-position {
-    display: inline-block; background: var(--accent2); color: white;
+    display: inline-block; background: var(--accent); color: white;
     font-size: 10px; font-weight: 600; padding: 2px 8px;
     border-radius: 10px; margin-left: 6px; vertical-align: middle;
   }
@@ -131,7 +131,7 @@
     cursor: pointer; font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s;
   }
 
-  .segment-btn.active { background: var(--accent); color: white; }
+  .segment-btn.active { background: var(--accent); color: white; box-shadow: 0 2px 8px rgba(192,57,43,0.2); }
 
   .segment-view { display: none; }
   .segment-view.active { display: block; }
@@ -145,8 +145,8 @@
 
   .status-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
   .status-card.idle::before { background: var(--border); }
-  .status-card.traveling::before { background: linear-gradient(90deg, var(--accent), var(--success)); }
-  .status-card.done::before { background: linear-gradient(90deg, var(--success), var(--accent2)); }
+  .status-card.traveling::before { background: var(--accent); }
+  .status-card.done::before { background: var(--success); }
 
   .status-label { font-size: 11px; letter-spacing: 0.15em; color: var(--text2); text-transform: uppercase; margin-bottom: 8px; }
   .status-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
@@ -174,15 +174,15 @@
   .action-btn .btn-sub { font-size: 12px; font-weight: 400; opacity: 0.7; }
 
   .btn-depart {
-    background: linear-gradient(135deg, #1a3a6a, #2a4a8a);
+    background: #fff;
     border: 2px solid var(--accent); color: var(--accent);
-    box-shadow: 0 0 30px rgba(79,142,247,0.15);
+    box-shadow: 0 4px 16px rgba(192,57,43,0.12);
   }
 
   .btn-arrive {
-    background: linear-gradient(135deg, #1a4a3a, #2a6a4a);
+    background: #fff;
     border: 2px solid var(--success); color: var(--success);
-    box-shadow: 0 0 30px rgba(45,212,160,0.15);
+    box-shadow: 0 4px 16px rgba(39,174,96,0.12);
   }
 
   .btn-disabled-state {
@@ -191,9 +191,10 @@
 
   /* 結果カード */
   .result-card {
-    background: linear-gradient(135deg, #0d1f3a, #0d2a1f);
-    border: 1px solid var(--accent); border-radius: 20px;
+    background: #fff;
+    border: 1px solid var(--border); border-radius: 20px;
     padding: 24px; margin-bottom: 16px; display: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
 
   .result-row {
@@ -232,9 +233,10 @@
   }
 
   .acc-rate-display {
-    background: linear-gradient(135deg, #1a2a4a, #2a1a4a);
+    background: #fff;
     border: 1px solid var(--accent2); border-radius: 14px;
     padding: 16px; margin-bottom: 20px; text-align: center;
+    box-shadow: 0 2px 12px rgba(123,94,167,0.1);
   }
 
   .acc-rate-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
@@ -244,10 +246,10 @@
   }
 
   .form-input-date {
-    width: 100%; background: var(--bg);
+    width: 100%; background: #fff;
     border: 1px solid var(--border); border-radius: 12px;
     padding: 14px 16px; color: var(--text); font-size: 16px;
-    font-family: 'DM Mono', monospace; outline: none;
+    font-family: 'Noto Sans JP', sans-serif; outline: none;
     transition: border-color 0.2s; margin-bottom: 20px;
     -webkit-appearance: none;
   }
@@ -256,7 +258,7 @@
 
   /* 送信ボタン */
   .btn-submit {
-    background: linear-gradient(135deg, var(--success), #1a8a6a);
+    background: var(--success);
     border: none; border-radius: 16px; padding: 18px;
     color: white; font-size: 17px; font-weight: 700;
     font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
@@ -267,7 +269,7 @@
   .btn-submit:active { opacity: 0.8; transform: scale(0.98); }
 
   .btn-acc-submit {
-    background: linear-gradient(135deg, var(--accent2), #5a3a8a);
+    background: var(--accent2);
     border: none; border-radius: 16px; padding: 18px;
     color: white; font-size: 17px; font-weight: 700;
     font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
@@ -301,7 +303,7 @@
 
   /* GPS取得中 */
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .gps-loading { animation: pulse 1.2s infinite; color: var(--warning); }
+  .gps-loading { animation: pulse 1.2s infinite; color: var(--accent); }
 
   /* トースト */
   .toast {
@@ -340,7 +342,7 @@
   /* === 新幹線アニメーション === */
   .train-scene {
     display: none; position: relative; height: 100px; margin: 16px 0;
-    background: linear-gradient(180deg, #0d1b2a 0%, #1b2838 70%, #2a2a2a 70%, #2a2a2a 100%);
+    background: linear-gradient(180deg, #e8f4fd 0%, #d4eaf7 70%, #ddd 70%, #ddd 100%);
     border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
   }
   .train-scene.active { display: block; }
@@ -348,11 +350,11 @@
   /* レール */
   .train-rail {
     position: absolute; bottom: 12px; left: 0; right: 0; height: 4px;
-    background: #888;
+    background: #999;
   }
   .train-rail::after {
     content: ''; position: absolute; top: 4px; left: 0; right: 0; height: 2px;
-    background: repeating-linear-gradient(90deg, #666 0, #666 20px, transparent 20px, transparent 30px);
+    background: repeating-linear-gradient(90deg, #888 0, #888 20px, transparent 20px, transparent 30px);
     animation: railScroll 0.4s linear infinite;
   }
   .train-scene.stopping .train-rail::after {
@@ -365,29 +367,29 @@
 
   /* 新幹線 */
   .shinkansen {
-    position: absolute; bottom: 16px; left: -160px;
-    animation: trainRun 3s ease-in forwards;
+    position: absolute; bottom: 16px; left: -240px;
+    animation: trainRun 2.5s ease-out forwards;
   }
   .train-scene.running .shinkansen {
-    left: 30%;
-    animation: trainLoop 2.5s linear infinite;
+    left: calc(50% - 110px);
+    animation: trainLoop 2s linear infinite;
   }
   .train-scene.stopping .shinkansen {
     animation: trainStop 2s ease-out forwards;
   }
   @keyframes trainRun {
-    0% { left: -160px; opacity: 1; }
-    100% { left: 30%; opacity: 1; }
+    0% { left: -240px; }
+    100% { left: calc(50% - 110px); }
   }
   @keyframes trainLoop {
     0% { transform: translateX(0); }
-    50% { transform: translateX(8px); }
+    50% { transform: translateX(6px); }
     100% { transform: translateX(0); }
   }
   @keyframes trainStop {
-    0% { opacity: 1; }
-    70% { opacity: 1; left: 30%; }
-    100% { opacity: 0; left: 35%; }
+    0% { opacity: 1; left: calc(50% - 110px); }
+    60% { opacity: 1; left: calc(50% - 100px); }
+    100% { opacity: 0; left: calc(50% - 90px); }
   }
 
   /* 風景（流れる背景） */
@@ -395,7 +397,7 @@
     position: absolute; bottom: 16px; left: 0; right: 0; height: 50px;
     background: repeating-linear-gradient(90deg,
       transparent 0, transparent 80px,
-      rgba(74,144,226,0.08) 80px, rgba(74,144,226,0.08) 82px
+      rgba(0,0,0,0.04) 80px, rgba(0,0,0,0.04) 82px
     );
     animation: sceneryFlow 1.5s linear infinite;
   }
@@ -413,7 +415,7 @@
 <!-- ログイン画面 -->
 <div id="login-screen">
   <div class="logo-area">
-    <div class="logo-icon">🚗</div>
+    <div class="logo-icon">🚄</div>
     <div class="logo-title">出張日当管理</div>
     <div class="logo-sub">TRAVEL ALLOWANCE TRACKER</div>
   </div>
@@ -450,7 +452,7 @@
 
         <!-- 移動/宿泊 切替 -->
         <div class="segment-control">
-          <button class="segment-btn active" onclick="switchSegment('travel', this)">🚗 移動</button>
+          <button class="segment-btn active" onclick="switchSegment('travel', this)">🚄 移動</button>
           <button class="segment-btn" onclick="switchSegment('accommodation', this)">🏨 宿泊</button>
         </div>
 
@@ -467,31 +469,57 @@
           <div class="train-scene" id="scene-train">
             <div class="train-scenery"></div>
             <div class="train-rail"></div>
-            <svg class="shinkansen" width="140" height="50" viewBox="0 0 140 50">
-              <!-- 先頭ノーズ -->
-              <path d="M0,38 Q0,28 20,25 L20,38 Z" fill="#e8e8e8" stroke="#ccc" stroke-width="0.5"/>
+            <svg class="shinkansen" width="220" height="50" viewBox="0 0 220 50">
+              <!-- === 1号車（先頭・左向きノーズ） === -->
+              <!-- ノーズ -->
+              <path d="M0,38 Q0,26 24,22 L24,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
               <!-- ボディ -->
-              <rect x="20" y="18" width="110" height="20" rx="3" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <!-- 青ライン -->
-              <rect x="0" y="30" width="20" height="4" rx="1" fill="#0066cc"/>
-              <rect x="20" y="30" width="110" height="4" fill="#0066cc"/>
+              <rect x="24" y="16" width="82" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <!-- 赤ライン -->
+              <path d="M2,30 Q2,26 24,24 L24,28 Z" fill="#c0392b"/>
+              <rect x="24" y="24" width="82" height="4" fill="#c0392b"/>
               <!-- 窓 -->
-              <rect x="30" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
-              <rect x="44" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
-              <rect x="58" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
-              <rect x="72" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
-              <rect x="86" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
-              <rect x="100" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
-              <rect x="114" y="22" width="8" height="6" rx="1" fill="#87ceeb" stroke="#999" stroke-width="0.3"/>
-              <!-- 先頭ライト -->
-              <circle cx="6" cy="30" r="2" fill="#ffdd44"/>
-              <!-- 車輪 -->
-              <circle cx="35" cy="40" r="3" fill="#555"/>
-              <circle cx="55" cy="40" r="3" fill="#555"/>
-              <circle cx="95" cy="40" r="3" fill="#555"/>
-              <circle cx="115" cy="40" r="3" fill="#555"/>
+              <rect x="32" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="44" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="56" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="68" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="80" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="92" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <!-- ヘッドライト -->
+              <circle cx="6" cy="30" r="2.5" fill="#ffdd44" stroke="#e6c200" stroke-width="0.5"/>
               <!-- 屋根 -->
-              <rect x="20" y="15" width="110" height="4" rx="2" fill="#ddd"/>
+              <rect x="24" y="13" width="82" height="4" rx="2" fill="#e0e0e0"/>
+              <!-- 車輪 -->
+              <circle cx="36" cy="40" r="3" fill="#555"/>
+              <circle cx="56" cy="40" r="3" fill="#555"/>
+              <circle cx="86" cy="40" r="3" fill="#555"/>
+
+              <!-- === 連結部 === -->
+              <rect x="106" y="18" width="8" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+
+              <!-- === 2号車（後尾・右向きノーズ） === -->
+              <!-- ボディ -->
+              <rect x="114" y="16" width="82" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <!-- ノーズ -->
+              <path d="M220,38 Q220,26 196,22 L196,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+              <!-- 赤ライン -->
+              <rect x="114" y="24" width="82" height="4" fill="#c0392b"/>
+              <path d="M218,30 Q218,26 196,24 L196,28 Z" fill="#c0392b"/>
+              <!-- 窓 -->
+              <rect x="120" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="132" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="144" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="156" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="168" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <rect x="180" y="18" width="8" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
+              <!-- テールライト -->
+              <circle cx="214" cy="30" r="2" fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
+              <!-- 屋根 -->
+              <rect x="114" y="13" width="82" height="4" rx="2" fill="#e0e0e0"/>
+              <!-- 車輪 -->
+              <circle cx="134" cy="40" r="3" fill="#555"/>
+              <circle cx="164" cy="40" r="3" fill="#555"/>
+              <circle cx="184" cy="40" r="3" fill="#555"/>
             </svg>
           </div>
 
@@ -618,7 +646,7 @@
   <!-- タブバー -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('record', this)">
-      <span class="tab-icon">🚗</span>
+      <span class="tab-icon">🚄</span>
       記録
     </button>
     <button class="tab-btn" onclick="switchTab('history', this)">

@@ -37,79 +37,46 @@
 
   /* ログイン画面 */
   #login-screen {
-    min-height: 100vh;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
     padding: 32px 24px;
     background: radial-gradient(ellipse at 50% 0%, #1a1a3a 0%, var(--bg) 70%);
   }
 
-  .logo-area {
-    text-align: center;
-    margin-bottom: 48px;
-  }
+  .logo-area { text-align: center; margin-bottom: 48px; }
 
   .logo-icon {
-    width: 72px;
-    height: 72px;
+    width: 72px; height: 72px;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 16px;
-    font-size: 32px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; font-size: 32px;
     box-shadow: 0 0 40px rgba(79,142,247,0.3);
   }
 
   .logo-title {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-size: 22px; font-weight: 700; letter-spacing: 0.05em;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
 
-  .logo-sub {
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 4px;
-    letter-spacing: 0.1em;
-  }
+  .logo-sub { font-size: 12px; color: var(--text2); margin-top: 4px; letter-spacing: 0.1em; }
 
   .login-card {
-    width: 100%;
-    max-width: 360px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px 24px;
+    width: 100%; max-width: 360px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px 24px;
   }
 
-  .form-label {
-    font-size: 12px;
-    color: var(--text2);
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
-    display: block;
-  }
+  .form-label { font-size: 12px; color: var(--text2); letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
 
   .form-input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
-    color: var(--text);
-    font-size: 16px;
-    font-family: 'DM Mono', monospace;
-    outline: none;
-    transition: border-color 0.2s;
-    margin-bottom: 20px;
+    width: 100%; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; color: var(--text); font-size: 16px;
+    font-family: 'DM Mono', monospace; outline: none;
+    transition: border-color 0.2s; margin-bottom: 20px;
   }
 
   .form-input:focus { border-color: var(--accent); }
@@ -117,15 +84,10 @@
   .btn-primary {
     width: 100%;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none;
-    border-radius: 14px;
-    padding: 16px;
-    color: white;
-    font-size: 16px;
-    font-weight: 700;
+    border: none; border-radius: 14px; padding: 16px;
+    color: white; font-size: 16px; font-weight: 700;
     font-family: 'Noto Sans JP', sans-serif;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
     letter-spacing: 0.05em;
   }
 
@@ -136,294 +98,218 @@
 
   .top-bar {
     padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    background: var(--surface); position: sticky; top: 0; z-index: 10;
   }
 
-  .top-bar-title {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+  .top-bar-user { font-size: 15px; font-weight: 700; letter-spacing: 0.05em; }
+  .top-bar-position {
+    display: inline-block; background: var(--accent2); color: white;
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; margin-left: 6px; vertical-align: middle;
   }
-
-  .top-bar-date {
-    font-size: 12px;
-    color: var(--text2);
-    font-family: 'DM Mono', monospace;
-  }
+  .top-bar-date { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; }
 
   .logout-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 12px;
-    color: var(--text2);
-    font-size: 12px;
-    cursor: pointer;
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; color: var(--text2); font-size: 12px; cursor: pointer;
     font-family: 'Noto Sans JP', sans-serif;
   }
 
   .content { padding: 20px; }
 
+  /* セグメントコントロール */
+  .segment-control {
+    display: flex; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 4px; margin-bottom: 16px;
+  }
+
+  .segment-btn {
+    flex: 1; padding: 12px; border: none; border-radius: 12px;
+    background: none; color: var(--text2); font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s;
+  }
+
+  .segment-btn.active { background: var(--accent); color: white; }
+
+  .segment-view { display: none; }
+  .segment-view.active { display: block; }
+
   /* ステータスカード */
   .status-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 16px;
-    position: relative;
-    overflow: hidden;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 24px; margin-bottom: 16px;
+    position: relative; overflow: hidden;
   }
 
-  .status-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-  }
-
+  .status-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
   .status-card.idle::before { background: var(--border); }
   .status-card.traveling::before { background: linear-gradient(90deg, var(--accent), var(--success)); }
   .status-card.done::before { background: linear-gradient(90deg, var(--success), var(--accent2)); }
 
-  .status-label {
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    color: var(--text2);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .status-value {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-
+  .status-label { font-size: 11px; letter-spacing: 0.15em; color: var(--text2); text-transform: uppercase; margin-bottom: 8px; }
+  .status-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
   .status-idle { color: var(--text2); }
   .status-moving { color: var(--accent); }
   .status-complete { color: var(--success); }
 
   .gps-info {
-    font-size: 11px;
-    color: var(--text3);
-    font-family: 'DM Mono', monospace;
-    margin-top: 8px;
-    word-break: break-all;
+    font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace;
+    margin-top: 8px; word-break: break-all;
   }
 
-  .time-display {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text2);
-    margin-top: 6px;
-  }
-
-  /* 大きなアクションボタン */
+  /* アクションボタン */
   .action-btn {
-    width: 100%;
-    border: none;
-    border-radius: 20px;
-    padding: 28px 20px;
-    font-size: 20px;
-    font-weight: 700;
-    font-family: 'Noto Sans JP', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    letter-spacing: 0.05em;
+    width: 100%; border: none; border-radius: 20px; padding: 28px 20px;
+    font-size: 20px; font-weight: 700; font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    margin-bottom: 12px; letter-spacing: 0.05em;
   }
 
   .action-btn:active { transform: scale(0.97); }
   .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
   .action-btn .btn-icon { font-size: 36px; }
   .action-btn .btn-sub { font-size: 12px; font-weight: 400; opacity: 0.7; }
 
   .btn-depart {
     background: linear-gradient(135deg, #1a3a6a, #2a4a8a);
-    border: 2px solid var(--accent);
-    color: var(--accent);
+    border: 2px solid var(--accent); color: var(--accent);
     box-shadow: 0 0 30px rgba(79,142,247,0.15);
   }
 
   .btn-arrive {
     background: linear-gradient(135deg, #1a4a3a, #2a6a4a);
-    border: 2px solid var(--success);
-    color: var(--success);
+    border: 2px solid var(--success); color: var(--success);
     box-shadow: 0 0 30px rgba(45,212,160,0.15);
   }
 
   .btn-disabled-state {
-    background: var(--surface2);
-    border: 2px solid var(--border);
-    color: var(--text3);
+    background: var(--surface2); border: 2px solid var(--border); color: var(--text3);
   }
 
-  /* 入力フォーム */
+  /* 結果カード */
+  .result-card {
+    background: linear-gradient(135deg, #0d1f3a, #0d2a1f);
+    border: 1px solid var(--accent); border-radius: 20px;
+    padding: 24px; margin-bottom: 16px; display: none;
+  }
+
+  .result-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+
+  .result-row:last-child { border-bottom: none; }
+  .result-label { font-size: 13px; color: var(--text2); }
+  .result-value { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--accent); }
+  .result-allowance { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 700; color: var(--success); }
+
+  /* 入力セクション */
   .input-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 20px; margin-bottom: 16px;
   }
 
   .section-title {
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    color: var(--text2);
-    text-transform: uppercase;
-    margin-bottom: 16px;
+    font-size: 12px; letter-spacing: 0.12em; color: var(--text2);
+    text-transform: uppercase; margin-bottom: 16px;
   }
 
   .form-group { margin-bottom: 16px; }
   .form-group:last-child { margin-bottom: 0; }
 
   textarea.form-input {
-    resize: none;
-    height: 80px;
-    line-height: 1.6;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: 15px;
+    resize: none; height: 80px; line-height: 1.6;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 15px;
   }
 
-  /* 距離・日当表示 */
-  .result-card {
-    background: linear-gradient(135deg, #0d1f3a, #0d2a1f);
-    border: 1px solid var(--accent);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 16px;
-    display: none;
+  /* 宿泊セクション */
+  .acc-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 24px; margin-bottom: 16px;
   }
 
-  .result-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
+  .acc-rate-display {
+    background: linear-gradient(135deg, #1a2a4a, #2a1a4a);
+    border: 1px solid var(--accent2); border-radius: 14px;
+    padding: 16px; margin-bottom: 20px; text-align: center;
   }
 
-  .result-row:last-child { border-bottom: none; }
-
-  .result-label { font-size: 13px; color: var(--text2); }
-
-  .result-value {
-    font-family: 'DM Mono', monospace;
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--accent);
+  .acc-rate-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .acc-rate-value {
+    font-family: 'DM Mono', monospace; font-size: 28px;
+    font-weight: 700; color: var(--accent2);
   }
 
-  .result-allowance {
-    font-family: 'DM Mono', monospace;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--success);
+  .form-input-date {
+    width: 100%; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; color: var(--text); font-size: 16px;
+    font-family: 'DM Mono', monospace; outline: none;
+    transition: border-color 0.2s; margin-bottom: 20px;
+    -webkit-appearance: none;
   }
+
+  .form-input-date:focus { border-color: var(--accent); }
 
   /* 送信ボタン */
   .btn-submit {
     background: linear-gradient(135deg, var(--success), #1a8a6a);
-    border: none;
-    border-radius: 16px;
-    padding: 18px;
-    color: white;
-    font-size: 17px;
-    font-weight: 700;
-    font-family: 'Noto Sans JP', sans-serif;
-    cursor: pointer;
-    width: 100%;
-    letter-spacing: 0.05em;
-    transition: all 0.2s;
-    display: none;
-    margin-bottom: 16px;
+    border: none; border-radius: 16px; padding: 18px;
+    color: white; font-size: 17px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+    width: 100%; letter-spacing: 0.05em; transition: all 0.2s;
+    display: none; margin-bottom: 16px;
   }
 
   .btn-submit:active { opacity: 0.8; transform: scale(0.98); }
 
-  /* 履歴リスト */
-  .history-section {
-    margin-top: 8px;
+  .btn-acc-submit {
+    background: linear-gradient(135deg, var(--accent2), #5a3a8a);
+    border: none; border-radius: 16px; padding: 18px;
+    color: white; font-size: 17px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+    width: 100%; letter-spacing: 0.05em; transition: all 0.2s;
   }
 
-  .history-title {
-    font-size: 13px;
-    color: var(--text2);
-    letter-spacing: 0.1em;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-  }
+  .btn-acc-submit:active { opacity: 0.8; transform: scale(0.98); }
+  .btn-acc-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* 履歴 */
+  .history-section { margin-top: 8px; }
+  .history-title { font-size: 13px; color: var(--text2); letter-spacing: 0.1em; margin-bottom: 12px; text-transform: uppercase; }
 
   .history-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 10px;
   }
 
-  .history-date {
-    font-size: 11px;
-    color: var(--text3);
-    font-family: 'DM Mono', monospace;
-    margin-bottom: 6px;
+  .history-date { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .history-distance { font-size: 16px; font-weight: 700; color: var(--accent); font-family: 'DM Mono', monospace; }
+  .history-allowance { font-size: 14px; color: var(--success); font-family: 'DM Mono', monospace; }
+  .history-purpose { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+  .record-type-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 8px;
+    font-size: 10px; font-weight: 600; margin-right: 6px;
   }
 
-  .history-distance {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--accent);
-    font-family: 'DM Mono', monospace;
-  }
+  .badge-travel { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .badge-accommodation { background: rgba(123,94,167,0.15); color: var(--accent2); }
 
-  .history-allowance {
-    font-size: 14px;
-    color: var(--success);
-    font-family: 'DM Mono', monospace;
-  }
-
-  .history-purpose {
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 6px;
-  }
-
-  /* GPS取得中アニメ */
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
+  /* GPS取得中 */
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .gps-loading { animation: pulse 1.2s infinite; color: var(--warning); }
 
   /* トースト */
   .toast {
-    position: fixed;
-    bottom: 32px;
-    left: 50%;
+    position: fixed; bottom: 32px; left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 24px;
-    font-size: 14px;
-    z-index: 999;
-    transition: transform 0.3s;
-    white-space: nowrap;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 24px; font-size: 14px;
+    z-index: 999; transition: transform 0.3s; white-space: nowrap;
   }
 
   .toast.show { transform: translateX(-50%) translateY(0); }
@@ -432,27 +318,15 @@
 
   /* タブ */
   .tab-bar {
-    display: flex;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    position: sticky;
-    bottom: 0;
+    display: flex; background: var(--surface);
+    border-top: 1px solid var(--border); position: sticky; bottom: 0;
   }
 
   .tab-btn {
-    flex: 1;
-    padding: 12px 8px;
-    background: none;
-    border: none;
-    color: var(--text3);
-    font-size: 10px;
-    font-family: 'Noto Sans JP', sans-serif;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    transition: color 0.2s;
+    flex: 1; padding: 12px 8px; background: none; border: none;
+    color: var(--text3); font-size: 10px; font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; transition: color 0.2s;
   }
 
   .tab-btn.active { color: var(--accent); }
@@ -461,12 +335,7 @@
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
-  .empty-state {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text3);
-    font-size: 14px;
-  }
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text3); font-size: 14px; }
 </style>
 </head>
 <body>
@@ -479,6 +348,8 @@
     <div class="logo-sub">TRAVEL ALLOWANCE TRACKER</div>
   </div>
   <div class="login-card">
+    <label class="form-label">ログインID</label>
+    <input type="text" class="form-input" id="login-id" placeholder="login_id" autocomplete="username" style="font-size:15px;">
     <label class="form-label">パスワード</label>
     <input type="password" class="form-input" id="password-input" placeholder="••••••••" autocomplete="current-password">
     <button class="btn-primary" onclick="login()">ログイン</button>
@@ -489,73 +360,110 @@
 <div id="main-screen">
   <div class="top-bar">
     <div>
-      <div class="top-bar-title">移動日当記録</div>
+      <div class="top-bar-user">
+        <span id="user-name"></span>
+        <span class="top-bar-position" id="user-position"></span>
+      </div>
       <div class="top-bar-date" id="today-date"></div>
     </div>
     <button class="logout-btn" onclick="logout()">ログアウト</button>
   </div>
 
-  <!-- タブコンテンツ -->
   <div style="flex:1; overflow-y: auto;">
 
     <!-- 記録タブ -->
     <div class="tab-content active" id="tab-record">
       <div class="content">
 
-        <!-- ステータスカード -->
-        <div class="status-card idle" id="status-card">
-          <div class="status-label">現在の状態</div>
-          <div class="status-value status-idle" id="status-text">待機中</div>
-          <div class="gps-info" id="gps-info">出発ボタンを押して移動を開始</div>
+        <!-- 移動/宿泊 切替 -->
+        <div class="segment-control">
+          <button class="segment-btn active" onclick="switchSegment('travel', this)">🚗 移動</button>
+          <button class="segment-btn" onclick="switchSegment('accommodation', this)">🏨 宿泊</button>
         </div>
 
-        <!-- 出発ボタン -->
-        <button class="action-btn btn-depart" id="btn-depart" onclick="depart()">
-          <span class="btn-icon">📍</span>
-          <span>出発</span>
-          <span class="btn-sub">タップしてGPS記録開始</span>
-        </button>
+        <!-- === 移動セクション === -->
+        <div class="segment-view active" id="view-travel">
 
-        <!-- 到着ボタン -->
-        <button class="action-btn btn-disabled-state" id="btn-arrive" onclick="arrive()" disabled>
-          <span class="btn-icon">🏁</span>
-          <span>到着</span>
-          <span class="btn-sub">目的地に着いたらタップ</span>
-        </button>
+          <div class="status-card idle" id="status-card">
+            <div class="status-label">現在の状態</div>
+            <div class="status-value status-idle" id="status-text">待機中</div>
+            <div class="gps-info" id="gps-info">出発ボタンを押して移動を開始</div>
+          </div>
 
-        <!-- 結果表示 -->
-        <div class="result-card" id="result-card">
-          <div class="result-row">
-            <span class="result-label">移動距離（直線・片道）</span>
-            <span class="result-value" id="result-distance">-</span>
+          <button class="action-btn btn-depart" id="btn-depart" onclick="depart()">
+            <span class="btn-icon">📍</span>
+            <span>出発</span>
+            <span class="btn-sub">タップしてGPS記録開始</span>
+          </button>
+
+          <button class="action-btn btn-disabled-state" id="btn-arrive" onclick="arrive()" disabled>
+            <span class="btn-icon">🏁</span>
+            <span>到着</span>
+            <span class="btn-sub">目的地に着いたらタップ</span>
+          </button>
+
+          <div class="result-card" id="result-card">
+            <div class="result-row">
+              <span class="result-label">移動距離（直線・片道）</span>
+              <span class="result-value" id="result-distance">-</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">該当区分</span>
+              <span class="result-value" id="result-tier" style="font-size:14px;">-</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">移動日当</span>
+              <span class="result-allowance" id="result-allowance">-</span>
+            </div>
           </div>
-          <div class="result-row">
-            <span class="result-label">該当区分</span>
-            <span class="result-value" id="result-tier" style="font-size:14px;">-</span>
+
+          <div class="input-section" id="input-section" style="display:none;">
+            <div class="section-title">任意入力</div>
+            <div class="form-group">
+              <label class="form-label">目的</label>
+              <textarea class="form-input" id="input-purpose" placeholder="例）〇〇商談、現場確認など"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">面談相手</label>
+              <input type="text" class="form-input" id="input-person" placeholder="例）〇〇社 田中様">
+            </div>
           </div>
-          <div class="result-row">
-            <span class="result-label">移動日当</span>
-            <span class="result-allowance" id="result-allowance">-</span>
-          </div>
+
+          <button class="btn-submit" id="btn-submit" onclick="submitRecord()">
+            ✓ この移動を記録する
+          </button>
+
         </div>
 
-        <!-- 入力フォーム -->
-        <div class="input-section" id="input-section" style="display:none;">
-          <div class="section-title">任意入力</div>
-          <div class="form-group">
-            <label class="form-label">目的</label>
-            <textarea class="form-input" id="input-purpose" placeholder="例）〇〇商談、現場確認など"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">面談相手</label>
-            <input type="text" class="form-input" id="input-person" placeholder="例）〇〇社 田中様">
-          </div>
-        </div>
+        <!-- === 宿泊セクション === -->
+        <div class="segment-view" id="view-accommodation">
 
-        <!-- 送信ボタン -->
-        <button class="btn-submit" id="btn-submit" onclick="submitRecord()">
-          ✓ この移動を記録する
-        </button>
+          <div class="acc-rate-display">
+            <div class="acc-rate-label">あなたの宿泊日当</div>
+            <div class="acc-rate-value" id="acc-rate">¥0</div>
+          </div>
+
+          <div class="acc-card">
+            <div class="section-title">宿泊記録</div>
+            <div class="form-group">
+              <label class="form-label">宿泊日</label>
+              <input type="date" class="form-input-date" id="acc-date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ホテル名</label>
+              <input type="text" class="form-input" id="acc-hotel" placeholder="例）〇〇ホテル" style="font-family:'Noto Sans JP',sans-serif;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">備考（任意）</label>
+              <textarea class="form-input" id="acc-note" placeholder="例）〇〇プロジェクト出張" style="font-family:'Noto Sans JP',sans-serif;height:60px;resize:none;"></textarea>
+            </div>
+          </div>
+
+          <button class="btn-acc-submit" onclick="submitAccommodation()">
+            🏨 宿泊を記録する
+          </button>
+
+        </div>
 
       </div>
     </div>
@@ -596,58 +504,92 @@ const SUPABASE_URL = 'https://aeguoilgauxwincmulnc.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlZ3VvaWxnYXV4d2luY211bG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjYwOTgsImV4cCI6MjA4ODQ0MjA5OH0.SQv2NS6tyenI_9IB9yHfkX_Dj3jeKiLmdBoG0PVZswY';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ===== 設定（Supabaseから読み込み） =====
-let CONFIG = {
-  mobilePassword: 'admin1234',
-  tiers: [
-    { min: 0,   max: 50,  label: '50km未満',            allowance: 0 },
-    { min: 50,  max: 100, label: '50km以上100km未満',   allowance: 5000 },
-    { min: 100, max: 200, label: '100km以上200km未満',  allowance: 10000 },
-    { min: 200, max: 9999,label: '200km以上',           allowance: 20000 },
-  ]
-};
+// ===== 設定 =====
+let CONFIG = { positions: [] };
+let currentEmployee = null;
 
 async function loadConfig() {
-  const { data, error } = await db.from('app_config').select('*').eq('id', 1).single();
-  if (data) {
-    CONFIG.mobilePassword = data.mobile_password;
-    CONFIG.tiers = data.tiers;
+  const { data } = await db.from('app_config').select('*').eq('id', 1).single();
+  if (data && data.positions) {
+    CONFIG.positions = data.positions;
   }
+}
+
+function getPositionConfig() {
+  if (!currentEmployee) return CONFIG.positions[0];
+  return CONFIG.positions.find(p => p.name === currentEmployee.position) || CONFIG.positions[0];
+}
+
+function getTravelTier(km) {
+  const pos = getPositionConfig();
+  if (!pos || !pos.travel_tiers) return { label: '不明', allowance: 0 };
+  return pos.travel_tiers.find(t => km >= t.min && km < t.max) || pos.travel_tiers[pos.travel_tiers.length - 1];
+}
+
+function getAccommodationAllowance() {
+  const pos = getPositionConfig();
+  return pos ? pos.accommodation_allowance || 0 : 0;
 }
 
 // ===== 状態管理 =====
 let state = {
   phase: 'idle',
-  departTime: null,
-  arriveTime: null,
-  departGPS: null,
-  arriveGPS: null,
-  distance: null,
-  allowance: null,
-  tier: null,
+  departTime: null, arriveTime: null,
+  departGPS: null, arriveGPS: null,
+  distance: null, allowance: null, tier: null,
 };
 
 // ===== 日付表示 =====
 function updateDate() {
   const now = new Date();
-  const d = now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
-  document.getElementById('today-date').textContent = d;
+  document.getElementById('today-date').textContent =
+    now.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
+}
+
+function todayStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 }
 
 // ===== ログイン =====
 async function login() {
+  const loginId = document.getElementById('login-id').value.trim();
   const pw = document.getElementById('password-input').value;
-  await loadConfig();
-  if (pw === CONFIG.mobilePassword) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'flex';
-    document.getElementById('main-screen').style.flexDirection = 'column';
-    updateDate();
-    loadHistory();
-    showToast('ログインしました', 'success');
-  } else {
-    showToast('パスワードが違います', 'error');
+
+  if (!loginId || !pw) {
+    showToast('ログインIDとパスワードを入力してください', 'error');
+    return;
   }
+
+  const { data, error } = await db
+    .from('employees')
+    .select('*')
+    .eq('login_id', loginId)
+    .eq('password', pw)
+    .single();
+
+  if (!data) {
+    showToast('ログインIDまたはパスワードが違います', 'error');
+    return;
+  }
+
+  currentEmployee = data;
+  await loadConfig();
+
+  document.getElementById('user-name').textContent = data.name;
+  document.getElementById('user-position').textContent = data.position;
+
+  // 宿泊日当の表示更新
+  const accRate = getAccommodationAllowance();
+  document.getElementById('acc-rate').textContent = '¥' + accRate.toLocaleString();
+  document.getElementById('acc-date').value = todayStr();
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'flex';
+  document.getElementById('main-screen').style.flexDirection = 'column';
+  updateDate();
+  loadHistory();
+  showToast(data.name + ' さん、こんにちは', 'success');
 }
 
 document.getElementById('password-input').addEventListener('keypress', e => {
@@ -660,8 +602,18 @@ function logout() {
   }
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('login-id').value = '';
   document.getElementById('password-input').value = '';
+  currentEmployee = null;
   resetState();
+}
+
+// ===== セグメント切替 =====
+function switchSegment(name, btn) {
+  document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.segment-view').forEach(v => v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-' + name).classList.add('active');
 }
 
 // ===== GPS取得 =====
@@ -690,11 +642,6 @@ function calcDistance(a, b) {
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
 }
 
-// ===== 距離帯判定 =====
-function getTier(km) {
-  return CONFIG.tiers.find(t => km >= t.min && km < t.max) || CONFIG.tiers[CONFIG.tiers.length-1];
-}
-
 // ===== 出発 =====
 async function depart() {
   const btn = document.getElementById('btn-depart');
@@ -710,8 +657,7 @@ async function depart() {
     state.departTime = new Date();
     state.phase = 'traveling';
 
-    const card = document.getElementById('status-card');
-    card.className = 'status-card traveling';
+    document.getElementById('status-card').className = 'status-card traveling';
     document.getElementById('status-text').textContent = '移動中';
     document.getElementById('status-text').className = 'status-value status-moving';
     document.getElementById('gps-info').innerHTML =
@@ -722,7 +668,6 @@ async function depart() {
     const btnArrive = document.getElementById('btn-arrive');
     btnArrive.disabled = false;
     btnArrive.className = 'action-btn btn-arrive';
-
     btn.style.display = 'none';
     showToast('出発を記録しました', 'success');
 
@@ -751,12 +696,11 @@ async function arrive() {
 
     const km = calcDistance(state.departGPS, state.arriveGPS);
     state.distance = Math.round(km * 10) / 10;
-    const tier = getTier(state.distance);
+    const tier = getTravelTier(state.distance);
     state.tier = tier;
     state.allowance = tier.allowance;
 
-    const card = document.getElementById('status-card');
-    card.className = 'status-card done';
+    document.getElementById('status-card').className = 'status-card done';
     document.getElementById('status-text').textContent = '到着完了';
     document.getElementById('status-text').className = 'status-value status-complete';
     document.getElementById('gps-info').innerHTML =
@@ -764,8 +708,7 @@ async function arrive() {
       `📍 ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}<br>` +
       `精度: ±${Math.round(gps.accuracy)}m`;
 
-    const resultCard = document.getElementById('result-card');
-    resultCard.style.display = 'block';
+    document.getElementById('result-card').style.display = 'block';
     document.getElementById('result-distance').textContent = state.distance + ' km';
     document.getElementById('result-tier').textContent = tier.label;
     document.getElementById('result-allowance').textContent =
@@ -773,7 +716,6 @@ async function arrive() {
 
     document.getElementById('input-section').style.display = 'block';
     document.getElementById('btn-submit').style.display = 'block';
-
     btn.style.display = 'none';
     showToast('到着を記録しました', 'success');
 
@@ -783,7 +725,7 @@ async function arrive() {
   }
 }
 
-// ===== 記録送信 =====
+// ===== 移動記録送信 =====
 async function submitRecord() {
   const btn = document.getElementById('btn-submit');
   btn.disabled = true;
@@ -791,6 +733,10 @@ async function submitRecord() {
 
   const record = {
     id: Date.now(),
+    employee_id: currentEmployee.id,
+    employee_name: currentEmployee.name,
+    employee_position: currentEmployee.position,
+    record_type: 'travel',
     date: state.departTime.toISOString().split('T')[0],
     depart_time: state.departTime.toISOString(),
     arrive_time: state.arriveTime.toISOString(),
@@ -814,8 +760,63 @@ async function submitRecord() {
     return;
   }
 
-  showToast('記録を保存しました ✓', 'success');
+  showToast('移動記録を保存しました', 'success');
   resetState();
+  loadHistory();
+  switchTabByName('history');
+}
+
+// ===== 宿泊記録送信 =====
+async function submitAccommodation() {
+  const hotelName = document.getElementById('acc-hotel').value.trim();
+  const date = document.getElementById('acc-date').value;
+  const note = document.getElementById('acc-note').value.trim();
+
+  if (!hotelName) {
+    showToast('ホテル名を入力してください', 'error');
+    return;
+  }
+  if (!date) {
+    showToast('宿泊日を選択してください', 'error');
+    return;
+  }
+
+  const btn = document.querySelector('.btn-acc-submit');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  const allowance = getAccommodationAllowance();
+
+  const record = {
+    id: Date.now(),
+    employee_id: currentEmployee.id,
+    employee_name: currentEmployee.name,
+    employee_position: currentEmployee.position,
+    record_type: 'accommodation',
+    date: date,
+    distance: 0,
+    allowance: allowance,
+    hotel_name: hotelName,
+    purpose: note,
+    person: '',
+    edit_history: [],
+    submitted_at: new Date().toISOString(),
+  };
+
+  const { error } = await db.from('trip_records').insert(record);
+
+  btn.disabled = false;
+  btn.textContent = '🏨 宿泊を記録する';
+
+  if (error) {
+    showToast('保存に失敗しました', 'error');
+    return;
+  }
+
+  showToast('宿泊記録を保存しました', 'success');
+  document.getElementById('acc-hotel').value = '';
+  document.getElementById('acc-note').value = '';
+  document.getElementById('acc-date').value = todayStr();
   loadHistory();
   switchTabByName('history');
 }
@@ -846,6 +847,8 @@ function resetState() {
 
 // ===== 履歴表示 =====
 async function loadHistory() {
+  if (!currentEmployee) return;
+
   const now = new Date();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const startDate = `${yearMonth}-01`;
@@ -856,6 +859,7 @@ async function loadHistory() {
   const { data: records, error } = await db
     .from('trip_records')
     .select('*')
+    .eq('employee_id', currentEmployee.id)
     .gte('date', startDate)
     .lt('date', nextMonth)
     .order('date', { ascending: false });
@@ -867,21 +871,36 @@ async function loadHistory() {
     return;
   }
 
-  const totalDistance = records.reduce((s, r) => s + r.distance, 0);
-  const totalAllowance = records.reduce((s, r) => s + r.allowance, 0);
+  const travelRecords = records.filter(r => r.record_type === 'travel');
+  const accRecords = records.filter(r => r.record_type === 'accommodation');
+  const totalDistance = travelRecords.reduce((s, r) => s + r.distance, 0);
+  const totalTravelAllow = travelRecords.reduce((s, r) => s + r.allowance, 0);
+  const totalAccAllow = accRecords.reduce((s, r) => s + r.allowance, 0);
 
   let html = `
     <div style="background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:16px;margin-bottom:16px;">
       <div style="font-size:11px;color:var(--text2);letter-spacing:0.1em;margin-bottom:10px;">今月の合計</div>
-      <div style="display:flex;justify-content:space-between;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
-          <div style="font-size:11px;color:var(--text2)">移動距離</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--accent)">${Math.round(totalDistance*10)/10} km</div>
+          <div style="font-size:10px;color:var(--text2)">移動距離</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent)">${Math.round(totalDistance*10)/10} km</div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:11px;color:var(--text2)">日当合計</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--success)">¥${totalAllowance.toLocaleString()}</div>
+        <div>
+          <div style="font-size:10px;color:var(--text2)">移動日当</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--success)">¥${totalTravelAllow.toLocaleString()}</div>
         </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2)">宿泊回数</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent2)">${accRecords.length} 泊</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2)">宿泊日当</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--success)">¥${totalAccAllow.toLocaleString()}</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;display:flex;justify-content:space-between;">
+        <div style="font-size:12px;color:var(--text2)">日当合計</div>
+        <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--success)">¥${(totalTravelAllow + totalAccAllow).toLocaleString()}</div>
       </div>
     </div>
   `;
@@ -889,17 +908,24 @@ async function loadHistory() {
   records.forEach(r => {
     const date = new Date(r.date);
     const dateStr = date.toLocaleDateString('ja-JP', { month:'2-digit', day:'2-digit', weekday:'short' });
+    const isTravel = r.record_type === 'travel';
+
     html += `
       <div class="history-item">
-        <div class="history-date">${dateStr}</div>
+        <div class="history-date">
+          <span class="record-type-badge ${isTravel ? 'badge-travel' : 'badge-accommodation'}">${isTravel ? '移動' : '宿泊'}</span>
+          ${dateStr}
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <span class="history-distance">${r.distance} km</span>
-            <span style="color:var(--text3);margin:0 8px;font-size:12px;">${r.tier}</span>
+            ${isTravel
+              ? `<span class="history-distance">${r.distance} km</span><span style="color:var(--text3);margin:0 8px;font-size:12px;">${r.tier}</span>`
+              : `<span style="font-size:14px;color:var(--accent2);">🏨 ${r.hotel_name || ''}</span>`
+            }
           </div>
           <span class="history-allowance">${r.allowance === 0 ? '対象外' : '¥'+r.allowance.toLocaleString()}</span>
         </div>
-        ${r.purpose || r.person ? `<div class="history-purpose">${[r.purpose, r.person].filter(Boolean).join(' / ')}</div>` : ''}
+        ${r.purpose ? `<div class="history-purpose">${r.purpose}${r.person ? ' / ' + r.person : ''}</div>` : ''}
       </div>
     `;
   });

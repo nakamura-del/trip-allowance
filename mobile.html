@@ -402,6 +402,10 @@
             <span class="btn-sub">目的地に着いたらタップ</span>
           </button>
 
+          <button id="btn-cancel" style="display:none;width:100%;border:none;border-radius:12px;padding:14px;font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text2);margin-bottom:12px;transition:all 0.2s;" onclick="cancelTrip()">
+            出発を取り消す
+          </button>
+
           <div class="result-card" id="result-card">
             <div class="result-row">
               <span class="result-label">移動距離（直線・片道）</span>
@@ -439,7 +443,7 @@
         <div class="segment-view" id="view-accommodation">
 
           <div class="acc-rate-display">
-            <div class="acc-rate-label">あなたの宿泊日当</div>
+            <div class="acc-rate-label">あなたの宿泊費限度額</div>
             <div class="acc-rate-value" id="acc-rate">¥0</div>
           </div>
 
@@ -693,6 +697,7 @@ async function depart() {
     btnArrive.disabled = false;
     btnArrive.className = 'action-btn btn-arrive';
     btn.style.display = 'none';
+    document.getElementById('btn-cancel').style.display = 'block';
     showToast('出発を記録しました', 'success');
 
   } catch(e) {
@@ -896,6 +901,13 @@ async function submitAccommodation() {
   switchTabByName('history');
 }
 
+// ===== 出発取り消し =====
+function cancelTrip() {
+  if (state.phase !== 'traveling') return;
+  resetState();
+  showToast('出発を取り消しました', 'success');
+}
+
 // ===== 状態リセット =====
 function resetState() {
   state = { phase:'idle', departTime:null, arriveTime:null, departGPS:null, arriveGPS:null, distance:null, allowance:null, tier:null };
@@ -910,6 +922,7 @@ function resetState() {
   document.getElementById('btn-arrive').style.display = 'flex';
   document.getElementById('btn-arrive').disabled = true;
   document.getElementById('btn-arrive').className = 'action-btn btn-disabled-state';
+  document.getElementById('btn-cancel').style.display = 'none';
 
   document.getElementById('result-card').style.display = 'none';
   document.getElementById('input-section').style.display = 'none';

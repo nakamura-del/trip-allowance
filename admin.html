@@ -6,6 +6,7 @@
 <title>出張日当管理画面</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root {
     --bg: #f4f6fb; --surface: #ffffff; --surface2: #f8f9fc;
@@ -353,6 +354,13 @@
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast.success { background: var(--success); }
   .toast.error { background: var(--danger); }
+
+  .pdf-extract-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  .pdf-extract-table th, .pdf-extract-table td { padding: 8px 12px; border: 1px solid var(--border); font-size: 13px; text-align: left; }
+  .pdf-extract-table th { background: var(--surface2); font-weight: 600; color: var(--text2); }
+  .pdf-extract-section { margin-bottom: 16px; }
+  .pdf-extract-section-title { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+  .pdf-sync-banner { background: #ecfdf5; border: 1px solid var(--success); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: var(--success); display: flex; align-items: center; gap: 8px; }
 </style>
 </head>
 <body>
@@ -362,11 +370,13 @@
   <div class="login-box">
     <div class="login-header">
       <div class="login-icon">🗂️</div>
-      <div class="login-title">管理画面</div>
-      <div class="login-sub">出張日当管理システム</div>
+      <div class="login-title">出張日当管理</div>
+      <div class="login-sub">ログインしてください</div>
     </div>
+    <label class="form-label">ログインID</label>
+    <input type="text" class="form-input" id="admin-login-id" placeholder="login_id" autocomplete="username">
     <label class="form-label">パスワード</label>
-    <input type="password" class="form-input" id="admin-pw" placeholder="管理者パスワード">
+    <input type="password" class="form-input" id="admin-pw" placeholder="パスワード" autocomplete="current-password">
     <button class="btn-primary" onclick="adminLogin()">ログイン</button>
   </div>
 </div>
@@ -388,14 +398,15 @@
     <button class="nav-item" onclick="showPage('monthly', this)">
       <span class="nav-icon">📅</span> 月次集計
     </button>
-    <button class="nav-item" onclick="showPage('employees', this)">
+    <button class="nav-item" id="nav-employees" onclick="showPage('employees', this)">
       <span class="nav-icon">👤</span> 従業員管理
     </button>
-    <button class="nav-item" onclick="showPage('settings', this)">
+    <button class="nav-item" id="nav-settings" onclick="showPage('settings', this)">
       <span class="nav-icon">⚙️</span> 旅費規定・設定
     </button>
 
     <div class="sidebar-bottom">
+      <div id="admin-user-info" style="padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--text2);"></div>
       <button class="logout-btn-side" onclick="adminLogout()">
         <span class="nav-icon">🚪</span> ログアウト
       </button>
@@ -410,6 +421,9 @@
         <div class="page-title">ダッシュボード</div>
         <div class="page-sub" id="dash-month-label"></div>
       </div>
+      <!-- セットアップガイド -->
+      <div id="setup-guide" style="display:none;"></div>
+
       <div class="summary-grid" id="summary-grid"></div>
       <div class="table-card">
         <div class="table-header">
@@ -439,16 +453,18 @@
               <div class="current-month" id="current-month-display"></div>
               <button class="month-btn" onclick="changeMonth(1)">▶</button>
             </div>
-            <select class="filter-select" id="filter-employee" onchange="renderRecords()">
-              <option value="">全従業員</option>
-            </select>
+            <span id="filter-employee-wrap" style="display:inline-block;">
+              <select class="filter-select" id="filter-employee" onchange="renderRecords()">
+                <option value="">全従業員</option>
+              </select>
+            </span>
             <select class="filter-select" id="filter-type" onchange="renderRecords()">
               <option value="">全種別</option>
               <option value="travel">移動のみ</option>
               <option value="accommodation">宿泊のみ</option>
             </select>
           </div>
-          <button class="btn-sm btn-success" onclick="exportCSV()">📥 CSV出力</button>
+          <button class="btn-sm btn-success" id="btn-csv-export" onclick="exportCSV()">CSV出力</button>
         </div>
         <div style="overflow-x:auto;">
           <table>
@@ -496,21 +512,15 @@
     <div class="page" id="page-settings">
       <div class="page-header">
         <div class="page-title">旅費規定・設定</div>
-        <div class="page-sub">役職別の移動日当・宿泊日当の単価を設定</div>
+        <div class="page-sub">旅費規定PDFをアップロードすると役職・日当が自動反映されます</div>
       </div>
 
       <div class="settings-card">
-        <div class="settings-title">役職別 日当単価</div>
-        <div class="position-tabs" id="position-tabs"></div>
-        <div id="position-rate-editor"></div>
-        <div style="margin-top:16px;display:flex;gap:12px;">
-          <button class="btn-sm btn-success" onclick="savePositionRates()">保存する</button>
-          <button class="btn-sm btn-purple" onclick="addPosition()">+ 役職を追加</button>
+        <div class="settings-title">旅費規定PDF（正式書類）</div>
+        <div id="no-pdf-warning" style="display:none;background:#fffbeb;border:1px solid #f59e0b;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#92400e;">
+          ⚠️ 旅費規定PDFが登録されていません。PDFをアップロードすると、役職・日当の設定が自動的に反映されます。<br>
+          <strong>税務上、旅費規定の原本とアプリの設定が一致している必要があります。</strong>
         </div>
-      </div>
-
-      <div class="settings-card">
-        <div class="settings-title">旅費規定PDF</div>
         <div id="pdf-upload-area" style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;" onclick="document.getElementById('pdf-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='#eff6ff'" ondragleave="this.style.borderColor='var(--border)';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='';handlePdfDrop(event)">
           <div style="font-size:32px;margin-bottom:8px;">📄</div>
           <div style="font-size:14px;color:var(--text2);">クリックまたはドラッグ&ドロップでPDFをアップロード</div>
@@ -526,6 +536,9 @@
           </div>
           <div style="display:flex;gap:8px;">
             <button class="btn-sm btn-outline" onclick="viewPdf()">閲覧</button>
+            <button class="btn-sm btn-accent" onclick="reSyncFromPdf()">再反映</button>
+            <button class="btn-sm btn-outline" onclick="document.getElementById('pdf-file-input-update').click()">PDF更新</button>
+            <input type="file" id="pdf-file-input-update" accept=".pdf" style="display:none;" onchange="uploadPdf(this.files[0])">
             <button class="btn-sm btn-danger" onclick="deletePdf()">削除</button>
           </div>
         </div>
@@ -533,11 +546,26 @@
       </div>
 
       <div class="settings-card">
-        <div class="settings-title">管理画面パスワード</div>
-        <div style="max-width:300px;">
-          <input type="password" class="tier-input" id="pw-admin" placeholder="新しいパスワード" style="margin-bottom:12px;">
-          <button class="btn-sm btn-success" onclick="saveAdminPassword()">パスワードを更新</button>
+        <div class="settings-title">役職別 日当単価</div>
+        <div id="pdf-sync-status" style="display:none;" class="pdf-sync-banner">
+          ✓ 旅費規定PDFに基づく設定（税務署対応：規程原本と一致）
         </div>
+        <div id="no-positions-warning" style="display:none;background:#fef2f2;border:1px solid var(--danger);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#991b1b;">
+          旅費規定PDFをアップロードして役職を反映してください。手動での役職追加はできません。
+        </div>
+        <div class="position-tabs" id="position-tabs"></div>
+        <div id="position-rate-editor"></div>
+        <div id="position-actions" style="margin-top:16px;display:none;">
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">管理者アカウント</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">
+          管理者権限を持つ従業員のみ管理画面にログインできます。<br>
+          「従業員管理」画面で管理者権限のON/OFFを設定してください。
+        </div>
+        <div id="admin-users-list"></div>
       </div>
     </div>
 
@@ -604,6 +632,19 @@
   </div>
 </div>
 
+<!-- PDF抽出確認モーダル -->
+<div class="modal-overlay" id="pdf-extract-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-title">旅費規定PDFから抽出</div>
+    <div class="modal-info">以下の情報をPDFから抽出しました。「反映する」を押すとアプリの役職・日当設定が更新されます。</div>
+    <div id="pdf-extract-content"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePdfExtractModal()">キャンセル</button>
+      <button class="btn-save" onclick="applyPdfPositions()" style="background:var(--success);">アプリに反映する</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="admin-toast"></div>
 
 <script>
@@ -634,6 +675,7 @@ let currentMonth = new Date();
 let editingId = null;
 let editingEmpId = null;
 let selectedPositionIdx = 0;
+let hasPdf = false;
 
 async function loadConfig() {
   const { data } = await db.from('app_config').select('*').eq('id', 1).single();
@@ -649,20 +691,48 @@ async function loadEmployees() {
 }
 
 // ===== ログイン =====
+let currentAdmin = null;
+
 async function adminLogin() {
+  const loginId = document.getElementById('admin-login-id').value.trim();
   const pw = document.getElementById('admin-pw').value;
-  await loadConfig();
-  if (pw === CONFIG.adminPassword) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'block';
-    await loadEmployees();
-    renderDashboard();
-    updateMonthDisplay();
-    renderRecords();
-    populateEmployeeFilter();
-  } else {
-    showToast('パスワードが違います', 'error');
+
+  if (!loginId || !pw) {
+    showToast('ログインIDとパスワードを入力してください', 'error');
+    return;
   }
+
+  await loadConfig();
+
+  const { data, error } = await db
+    .from('employees')
+    .select('*')
+    .eq('login_id', loginId)
+    .eq('password', pw)
+    .single();
+
+  if (!data) {
+    showToast('ログインIDまたはパスワードが違います', 'error');
+    return;
+  }
+
+  currentAdmin = data;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'block';
+  document.getElementById('admin-user-info').textContent = currentAdmin.name + '（' + currentAdmin.position + '）';
+
+  // 管理者以外はメニューを制限
+  const isAdmin = currentAdmin.is_admin;
+  document.getElementById('nav-employees').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('nav-settings').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('filter-employee-wrap').style.display = isAdmin ? 'inline-block' : 'none';
+  document.getElementById('btn-csv-export').style.display = isAdmin ? 'inline-block' : 'none';
+
+  await loadEmployees();
+  renderDashboard();
+  updateMonthDisplay();
+  renderRecords();
+  if (isAdmin) populateEmployeeFilter();
 }
 
 document.getElementById('admin-pw').addEventListener('keypress', e => {
@@ -670,8 +740,10 @@ document.getElementById('admin-pw').addEventListener('keypress', e => {
 });
 
 function adminLogout() {
+  currentAdmin = null;
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('admin-login-id').value = '';
   document.getElementById('admin-pw').value = '';
 }
 
@@ -716,10 +788,78 @@ async function getAllRecords() {
   return data || [];
 }
 
+// ===== セットアップガイド =====
+function renderSetupGuide() {
+  const guide = document.getElementById('setup-guide');
+  const step1Done = hasPdf && CONFIG.positions.some(p => p.daily_allowance > 0);
+  const step2Done = employees.length > 1; // more than just admin
+  const step3Ready = step1Done && step2Done;
+  const allDone = step3Ready;
+
+  // Hide guide if everything is set up and there are records
+  if (allDone) {
+    guide.style.display = 'none';
+    return;
+  }
+
+  guide.style.display = 'block';
+  guide.innerHTML = `
+    <div style="background:white;border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow);">
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px;">初期設定ガイド</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;">以下の手順でセットアップを完了してください</div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:12px;background:${step1Done ? '#ecfdf5' : '#eff6ff'};border:1px solid ${step1Done ? 'var(--success)' : 'var(--accent)'};">
+          <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;background:${step1Done ? 'var(--success)' : 'var(--accent)'};color:white;">${step1Done ? '✓' : '1'}</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:${step1Done ? 'var(--success)' : 'var(--text)'};">旅費規定PDFをアップロード</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+              「旅費規定・設定」画面で旅費規定PDFをアップロードします。<br>
+              PDFから役職・日当・宿泊費が自動的に読み取られ、アプリに反映されます。
+            </div>
+            ${!step1Done ? '<button class="btn-sm btn-accent" style="margin-top:8px;" onclick="document.querySelector(\'[onclick*=settings]\').click()">設定画面へ</button>' : ''}
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:12px;background:${step2Done ? '#ecfdf5' : step1Done ? '#eff6ff' : 'var(--surface2)'};border:1px solid ${step2Done ? 'var(--success)' : step1Done ? 'var(--accent)' : 'var(--border)'};">
+          <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;background:${step2Done ? 'var(--success)' : step1Done ? 'var(--accent)' : 'var(--text3)'};color:white;">${step2Done ? '✓' : '2'}</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:${step2Done ? 'var(--success)' : step1Done ? 'var(--text)' : 'var(--text3)'};">従業員を登録</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+              「従業員管理」画面で従業員を追加します。<br>
+              旅費規定PDFの役職がそのまま選択肢に表示されます。
+            </div>
+            ${step1Done && !step2Done ? '<button class="btn-sm btn-accent" style="margin-top:8px;" onclick="document.querySelector(\'[onclick*=employees]\').click()">従業員管理へ</button>' : ''}
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:12px;background:${step3Ready ? '#eff6ff' : 'var(--surface2)'};border:1px solid ${step3Ready ? 'var(--accent)' : 'var(--border)'};">
+          <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;background:${step3Ready ? 'var(--accent)' : 'var(--text3)'};color:white;">3</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:${step3Ready ? 'var(--text)' : 'var(--text3)'};">従業員がスマホから利用開始</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6;">
+              従業員はスマートフォンで以下URLにアクセスし、<br>
+              登録したログインID・パスワードでログインします。<br>
+              ${step3Ready ? '<code style="background:var(--surface2);padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;margin-top:4px;">' + location.origin + '/mobile.html</code>' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // ===== ダッシュボード =====
 async function renderDashboard() {
+  await loadPdfInfo();
+  renderSetupGuide();
   const now = new Date();
-  const records = await getMonthRecords(now.getFullYear(), now.getMonth());
+  let records = await getMonthRecords(now.getFullYear(), now.getMonth());
+
+  // 一般従業員は自分の記録のみ
+  if (currentAdmin && !currentAdmin.is_admin) {
+    records = records.filter(r => r.employee_id === currentAdmin.id);
+  }
 
   document.getElementById('dash-month-label').textContent =
     now.toLocaleDateString('ja-JP', { year:'numeric', month:'long' }) + ' の集計';
@@ -800,7 +940,10 @@ async function renderDashboard() {
   }
 
   // 直近10件
-  const allRecords = await getAllRecords();
+  let allRecords = await getAllRecords();
+  if (currentAdmin && !currentAdmin.is_admin) {
+    allRecords = allRecords.filter(r => r.employee_id === currentAdmin.id);
+  }
   const recent = allRecords.slice(0, 10);
   if (recent.length === 0) {
     document.getElementById('recent-table-wrap').innerHTML = '<div class="empty-state">記録はまだありません</div>';
@@ -842,6 +985,11 @@ function changeMonth(delta) {
 async function renderRecords() {
   let records = await getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
 
+  // 一般従業員は自分の記録のみ
+  if (currentAdmin && !currentAdmin.is_admin) {
+    records = records.filter(r => r.employee_id === currentAdmin.id);
+  }
+
   const empFilter = document.getElementById('filter-employee').value;
   const typeFilter = document.getElementById('filter-type').value;
 
@@ -875,7 +1023,8 @@ async function renderRecords() {
           ${hasEdit ? '<span class="edit-badge">編集済</span>' : ''}
         </td>
         <td>
-          <button class="btn-sm btn-outline" onclick="openEdit(${r.id}, '${r.record_type}')">編集</button>
+          ${currentAdmin && currentAdmin.is_admin ? `<button class="btn-sm btn-outline" onclick="openEdit(${r.id}, '${r.record_type}')">編集</button>
+          <button class="btn-sm btn-outline" id="del-btn-${r.id}" onclick="confirmDeleteRecord(${r.id})" style="color:var(--danger);border-color:var(--danger);">削除</button>` : ''}
         </td>
       </tr>
     `;
@@ -941,6 +1090,61 @@ async function saveEdit() {
   showToast('編集を保存しました（履歴記録済）', 'success');
 }
 
+// ===== 記録削除（2段階確認） =====
+let deleteConfirmId = null;
+let deleteConfirmTimer = null;
+
+function confirmDeleteRecord(id) {
+  // 1回目: 確認表示に切り替え
+  if (deleteConfirmId !== id) {
+    // 前の確認状態をリセット
+    resetDeleteConfirm();
+
+    deleteConfirmId = id;
+    const btn = document.getElementById('del-btn-' + id);
+    btn.textContent = '本当に削除？';
+    btn.style.background = 'var(--danger)';
+    btn.style.color = 'white';
+    btn.style.borderColor = 'var(--danger)';
+
+    // 3秒後に自動リセット
+    deleteConfirmTimer = setTimeout(() => resetDeleteConfirm(), 3000);
+    return;
+  }
+
+  // 2回目: 実際に削除
+  clearTimeout(deleteConfirmTimer);
+  executeDeleteRecord(id);
+}
+
+function resetDeleteConfirm() {
+  if (deleteConfirmId) {
+    const btn = document.getElementById('del-btn-' + deleteConfirmId);
+    if (btn) {
+      btn.textContent = '削除';
+      btn.style.background = '';
+      btn.style.color = 'var(--danger)';
+      btn.style.borderColor = 'var(--danger)';
+    }
+    deleteConfirmId = null;
+  }
+  if (deleteConfirmTimer) {
+    clearTimeout(deleteConfirmTimer);
+    deleteConfirmTimer = null;
+  }
+}
+
+async function executeDeleteRecord(id) {
+  const { error } = await db.from('trip_records').delete().eq('id', id);
+  if (error) {
+    showToast('削除に失敗しました', 'error');
+    return;
+  }
+  deleteConfirmId = null;
+  renderRecords();
+  showToast('記録を削除しました', 'success');
+}
+
 // ===== CSV出力 =====
 async function exportCSV() {
   let records = await getMonthRecords(currentMonth.getFullYear(), currentMonth.getMonth());
@@ -986,7 +1190,11 @@ async function exportCSV() {
 
 // ===== 月次集計 =====
 async function renderMonthly() {
-  const records = await getAllRecords();
+  let records = await getAllRecords();
+  // 一般従業員は自分の記録のみ
+  if (currentAdmin && !currentAdmin.is_admin) {
+    records = records.filter(r => r.employee_id === currentAdmin.id);
+  }
   if (records.length === 0) {
     document.getElementById('monthly-content').innerHTML = '<div class="empty-state">記録がありません</div>';
     return;
@@ -1177,8 +1385,23 @@ async function deleteEmployee(id, name) {
 
 // ===== 旅費規定設定 =====
 function renderSettings() {
+  // No-PDF warning
+  document.getElementById('no-pdf-warning').style.display = hasPdf ? 'none' : 'block';
+
+  // PDF sync status banner
+  const hasPdfPositions = hasPdf && CONFIG.positions.some(p => p.daily_allowance > 0);
+  document.getElementById('pdf-sync-status').style.display = hasPdfPositions ? 'flex' : 'none';
+
+  // No-positions warning (PDF uploaded but not yet applied)
+  const showNoPosWarning = !hasPdf && CONFIG.positions.length <= 1 && !CONFIG.positions[0]?.daily_allowance;
+  document.getElementById('no-positions-warning').style.display = showNoPosWarning ? 'block' : 'none';
+
+  // Position actions (hidden when PDF is source)
+  document.getElementById('position-actions').style.display = 'none';
+
   renderPositionTabs();
   renderPositionRates();
+  renderAdminUsers();
 }
 
 function renderPositionTabs() {
@@ -1195,56 +1418,88 @@ function selectPosition(idx) {
 
 function renderPositionRates() {
   const pos = CONFIG.positions[selectedPositionIdx];
-  if (!pos) return;
+  if (!pos) {
+    document.getElementById('position-rate-editor').innerHTML = '';
+    return;
+  }
 
-  let html = `
-    <div style="margin-bottom:16px;">
-      <label class="form-label">役職名</label>
-      <input type="text" class="tier-input" id="pos-name" value="${pos.name}" style="max-width:200px;">
-    </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr 60px;gap:12px;">
-      <div>距離区分</div><div>日当金額（円）</div><div></div>
-    </div>
-  `;
+  const readOnly = hasPdf;
+  let html = '';
 
+  // Position name
+  if (readOnly) {
+    html += `<div style="margin-bottom:16px;font-size:13px;color:var(--text2);">役職: <strong style="color:var(--text);font-size:16px;">${pos.name}</strong></div>`;
+  } else {
+    html += `<div style="margin-bottom:16px;"><label class="form-label">役職名</label><input type="text" class="tier-input" id="pos-name" value="${pos.name}" style="max-width:200px;"></div>`;
+  }
+
+  // Travel tiers header
+  html += `<div style="font-size:12px;color:var(--text2);margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr 60px;gap:12px;">
+    <div>距離区分（第15条 移動日当）</div><div>移動日当</div><div></div>
+  </div>`;
+
+  // Travel tiers
   pos.travel_tiers.forEach((t, i) => {
-    html += `
-      <div class="tier-row">
-        <div class="tier-label-cell">
-          <div>${t.label}</div>
-          <div class="tier-range">${t.min}km以上${t.max < 9000 ? t.max+'km未満' : ''}</div>
-        </div>
-        <div>
-          <input type="number" class="tier-input" id="tier-${i}" value="${t.allowance}" min="0" step="100">
-        </div>
+    if (readOnly) {
+      html += `<div class="tier-row">
+        <div class="tier-label-cell"><div>${t.label}</div><div class="tier-range">${t.min}km以上${t.max < 9000 ? t.max+'km未満' : ''}</div></div>
+        <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:${t.allowance > 0 ? 'var(--success)' : 'var(--text3)'};">&yen;${t.allowance.toLocaleString()}</div>
+        <div></div>
+      </div>`;
+    } else {
+      html += `<div class="tier-row">
+        <div class="tier-label-cell"><div>${t.label}</div><div class="tier-range">${t.min}km以上${t.max < 9000 ? t.max+'km未満' : ''}</div></div>
+        <div><input type="number" class="tier-input" id="tier-${i}" value="${t.allowance}" min="0" step="100"></div>
         <div style="font-size:13px;color:var(--text2)">円</div>
-      </div>
-    `;
+      </div>`;
+    }
   });
 
-  html += `
-    <div class="tier-row" style="background:#f5f3ff;border-radius:10px;padding:12px;margin-top:8px;">
-      <div class="tier-label-cell">
-        <div style="color:var(--accent2);font-weight:600;">🏨 宿泊日当</div>
-        <div class="tier-range">1泊あたり</div>
-      </div>
-      <div>
-        <input type="number" class="tier-input" id="acc-allowance" value="${pos.accommodation_allowance || 0}" min="0" step="100">
-      </div>
+  // Daily allowance (第13条)
+  if (readOnly) {
+    html += `<div class="tier-row" style="background:#eff6ff;border-radius:10px;padding:12px;margin-top:8px;">
+      <div class="tier-label-cell"><div style="color:var(--accent);font-weight:600;">日当（第13条）</div><div class="tier-range">1日あたり</div></div>
+      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);">&yen;${(pos.daily_allowance || 0).toLocaleString()}</div>
+      <div></div>
+    </div>`;
+  } else {
+    html += `<div class="tier-row" style="background:#eff6ff;border-radius:10px;padding:12px;margin-top:8px;">
+      <div class="tier-label-cell"><div style="color:var(--accent);font-weight:600;">日当（第13条）</div><div class="tier-range">1日あたり</div></div>
+      <div><input type="number" class="tier-input" id="daily-allowance" value="${pos.daily_allowance || 0}" min="0" step="100"></div>
       <div style="font-size:13px;color:var(--text2)">円</div>
-    </div>
-  `;
+    </div>`;
+  }
 
-  if (CONFIG.positions.length > 1) {
-    html += `<div style="margin-top:16px;">
-      <button class="btn-sm btn-danger" onclick="removePosition(${selectedPositionIdx})">この役職を削除</button>
+  // Accommodation limit (第12条)
+  if (readOnly) {
+    html += `<div class="tier-row" style="background:#f5f3ff;border-radius:10px;padding:12px;margin-top:8px;">
+      <div class="tier-label-cell"><div style="color:var(--accent2);font-weight:600;">宿泊費限度額（第12条）</div><div class="tier-range">1泊あたり</div></div>
+      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2);">&yen;${(pos.accommodation_allowance || 0).toLocaleString()}</div>
+      <div></div>
+    </div>`;
+  } else {
+    html += `<div class="tier-row" style="background:#f5f3ff;border-radius:10px;padding:12px;margin-top:8px;">
+      <div class="tier-label-cell"><div style="color:var(--accent2);font-weight:600;">宿泊費限度額（第12条）</div><div class="tier-range">1泊あたり</div></div>
+      <div><input type="number" class="tier-input" id="acc-allowance" value="${pos.accommodation_allowance || 0}" min="0" step="100"></div>
+      <div style="font-size:13px;color:var(--text2)">円</div>
+    </div>`;
+  }
+
+  if (readOnly) {
+    html += `<div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:10px;font-size:12px;color:var(--text2);">
+      ※ 金額を変更するには、旅費規定PDFを更新してアップロードしてください。
     </div>`;
   }
 
   document.getElementById('position-rate-editor').innerHTML = html;
 }
 
+// 手動保存（PDF未登録時のフォールバック）
 async function savePositionRates() {
+  if (hasPdf) {
+    showToast('旅費規定PDFが正です。PDFを更新してアップロードしてください。', 'error');
+    return;
+  }
   const pos = CONFIG.positions[selectedPositionIdx];
   const newName = document.getElementById('pos-name').value.trim();
   if (!newName) { showToast('役職名を入力してください', 'error'); return; }
@@ -1253,6 +1508,7 @@ async function savePositionRates() {
   pos.travel_tiers.forEach((t, i) => {
     t.allowance = parseInt(document.getElementById('tier-' + i).value) || 0;
   });
+  pos.daily_allowance = parseInt(document.getElementById('daily-allowance').value) || 0;
   pos.accommodation_allowance = parseInt(document.getElementById('acc-allowance').value) || 0;
 
   const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('id', 1);
@@ -1263,6 +1519,10 @@ async function savePositionRates() {
 }
 
 function addPosition() {
+  if (hasPdf) {
+    showToast('旅費規定PDFが正です。PDFを更新してアップロードしてください。', 'error');
+    return;
+  }
   const base = CONFIG.positions[0];
   const newPos = {
     name: '新しい役職',
@@ -1275,6 +1535,10 @@ function addPosition() {
 }
 
 async function removePosition(idx) {
+  if (hasPdf) {
+    showToast('旅費規定PDFが正です。PDFを更新してアップロードしてください。', 'error');
+    return;
+  }
   const name = CONFIG.positions[idx].name;
   if (!confirm(`「${name}」を削除しますか？`)) return;
 
@@ -1295,14 +1559,17 @@ async function loadPdfInfo() {
   const currentArea = document.getElementById('pdf-current');
 
   if (data && data.pdf_filename) {
+    hasPdf = true;
     uploadArea.style.display = 'none';
     currentArea.style.display = 'flex';
     document.getElementById('pdf-filename').textContent = data.pdf_filename;
     document.getElementById('pdf-uploaded-at').textContent = 'アップロード: ' + new Date(data.pdf_uploaded_at).toLocaleString('ja-JP');
   } else {
+    hasPdf = false;
     uploadArea.style.display = 'block';
     currentArea.style.display = 'none';
   }
+  renderSettings();
 }
 
 function handlePdfDrop(e) {
@@ -1320,6 +1587,14 @@ async function uploadPdf(file) {
 
   document.getElementById('pdf-upload-area').style.display = 'none';
   document.getElementById('pdf-uploading').style.display = 'block';
+
+  // Parse PDF to extract travel regulation data
+  let pdfData = null;
+  try {
+    pdfData = await parsePdfFile(file);
+  } catch (e) {
+    console.warn('PDF parsing failed:', e);
+  }
 
   const path = 'travel-regulation.pdf';
   const { error: uploadErr } = await db.storage.from('documents').upload(path, file, { upsert: true });
@@ -1340,6 +1615,202 @@ async function uploadPdf(file) {
   document.getElementById('pdf-file-input').value = '';
   showToast('旅費規定PDFをアップロードしました', 'success');
   loadPdfInfo();
+
+  // Show extraction confirmation if data was found
+  if (pdfData && (pdfData.positions.length > 0 || pdfData.travelTiers.length > 0)) {
+    showPdfExtractModal(pdfData);
+  }
+}
+
+// ===== PDF解析 =====
+async function parsePdfFile(file) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    fullText += pageText + '\n';
+  }
+
+  return parseTravelRegulation(fullText);
+}
+
+function parseTravelRegulation(text) {
+  const result = {
+    positions: [],
+    accommodationLimits: {},
+    dailyAllowances: {},
+    travelTiers: []
+  };
+
+  const positionNames = ['代表取締役', '取締役', '部長', '課長', '係長', '一般'];
+
+  function extractPositionAmounts(sectionText) {
+    const amounts = {};
+    for (const pos of positionNames) {
+      let pattern;
+      if (pos === '取締役') {
+        pattern = '(?<!代表)取締役';
+      } else {
+        pattern = pos;
+      }
+      const regex = new RegExp(pattern + '[^0-9]*?([0-9][0-9,]*)\\s*円');
+      const match = sectionText.match(regex);
+      if (match) {
+        amounts[pos] = parseInt(match[1].replace(/,/g, ''));
+      }
+    }
+    return amounts;
+  }
+
+  // Extract section texts
+  const sec12 = text.match(/第\s*12\s*条[\s\S]*?(?=第\s*13\s*条)/);
+  const sec13 = text.match(/第\s*13\s*条[\s\S]*?(?=第\s*14\s*条)/);
+  const sec15 = text.match(/第\s*15\s*条[\s\S]*?(?=第\s*16\s*条)/);
+
+  if (sec12) result.accommodationLimits = extractPositionAmounts(sec12[0]);
+  if (sec13) result.dailyAllowances = extractPositionAmounts(sec13[0]);
+
+  // Determine positions from extracted data
+  const allPositions = new Set([
+    ...Object.keys(result.accommodationLimits),
+    ...Object.keys(result.dailyAllowances)
+  ]);
+  result.positions = positionNames.filter(p => allPositions.has(p));
+
+  // Parse travel tiers (第15条)
+  if (sec15) {
+    const tierText = sec15[0];
+
+    // Range tiers: NNkm以上MMkm未満 X,XXX円
+    const rangeRegex = /(\d+)\s*km\s*以上\s*(\d+)\s*km\s*未満[^0-9]*?(\d[\d,]*)\s*円/g;
+    let match;
+    while ((match = rangeRegex.exec(tierText)) !== null) {
+      result.travelTiers.push({
+        min: parseInt(match[1]),
+        max: parseInt(match[2]),
+        label: match[1] + 'km以上' + match[2] + 'km未満',
+        allowance: parseInt(match[3].replace(/,/g, ''))
+      });
+    }
+
+    // Open-ended tier: NNkm以上 X,XXX円 (no upper limit)
+    const openRegex = /(\d+)\s*km\s*以上(?!\s*\d+\s*km)[^0-9]*?(\d[\d,]*)\s*円/g;
+    while ((match = openRegex.exec(tierText)) !== null) {
+      const min = parseInt(match[1]);
+      if (!result.travelTiers.find(t => t.min === min)) {
+        result.travelTiers.push({
+          min: min,
+          max: 9999,
+          label: min + 'km以上',
+          allowance: parseInt(match[2].replace(/,/g, ''))
+        });
+      }
+    }
+
+    result.travelTiers.sort((a, b) => a.min - b.min);
+  }
+
+  return result;
+}
+
+// ===== PDF抽出確認モーダル =====
+let pendingPdfData = null;
+
+function showPdfExtractModal(data) {
+  pendingPdfData = data;
+
+  let html = '';
+
+  if (data.positions.length > 0) {
+    html += '<div class="pdf-extract-section">';
+    html += '<div class="pdf-extract-section-title">役職別 宿泊費限度額・日当（第12条・第13条）</div>';
+    html += '<table class="pdf-extract-table"><thead><tr><th>役職</th><th>宿泊費限度額</th><th>日当</th></tr></thead><tbody>';
+    data.positions.forEach(pos => {
+      const acc = data.accommodationLimits[pos];
+      const daily = data.dailyAllowances[pos];
+      html += '<tr>';
+      html += '<td style="font-weight:600">' + pos + '</td>';
+      html += '<td class="mono">' + (acc != null ? '&yen;' + acc.toLocaleString() : '—') + '</td>';
+      html += '<td class="mono">' + (daily != null ? '&yen;' + daily.toLocaleString() : '—') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  if (data.travelTiers.length > 0) {
+    html += '<div class="pdf-extract-section">';
+    html += '<div class="pdf-extract-section-title">移動日当（第15条・全役職共通）</div>';
+    html += '<table class="pdf-extract-table"><thead><tr><th>片道距離</th><th>移動日当</th></tr></thead><tbody>';
+    data.travelTiers.forEach(t => {
+      html += '<tr><td>' + t.label + '</td><td class="mono">&yen;' + t.allowance.toLocaleString() + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  if (data.positions.length === 0 && data.travelTiers.length === 0) {
+    html = '<div style="text-align:center;padding:24px;color:var(--text2)">旅費規定の情報を抽出できませんでした。<br>PDFの形式が想定と異なる可能性があります。</div>';
+  }
+
+  document.getElementById('pdf-extract-content').innerHTML = html;
+  document.getElementById('pdf-extract-modal').classList.add('show');
+}
+
+function closePdfExtractModal() {
+  document.getElementById('pdf-extract-modal').classList.remove('show');
+  pendingPdfData = null;
+}
+
+async function applyPdfPositions() {
+  if (!pendingPdfData) return;
+  const data = pendingPdfData;
+
+  // Build travel_tiers array with 0km minimum tier
+  let travelTiers = [...data.travelTiers];
+  if (travelTiers.length > 0 && travelTiers[0].min > 0) {
+    travelTiers.unshift({
+      min: 0,
+      max: travelTiers[0].min,
+      label: travelTiers[0].min + 'km未満',
+      allowance: 0
+    });
+  }
+
+  // Fallback to current tiers if none extracted
+  if (travelTiers.length === 0 && CONFIG.positions[0]) {
+    travelTiers = CONFIG.positions[0].travel_tiers || [];
+  }
+
+  // Build positions array
+  const newPositions = data.positions.map(name => ({
+    name: name,
+    travel_tiers: travelTiers.map(t => ({...t})),
+    accommodation_allowance: data.accommodationLimits[name] || 0,
+    daily_allowance: data.dailyAllowances[name] || 0,
+  }));
+
+  if (newPositions.length === 0) {
+    showToast('反映する役職データがありません', 'error');
+    return;
+  }
+
+  CONFIG.positions = newPositions;
+
+  const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('id', 1);
+  if (error) {
+    showToast('設定の保存に失敗しました', 'error');
+    return;
+  }
+
+  closePdfExtractModal();
+  selectedPositionIdx = 0;
+  renderSettings();
+  showToast('旅費規定を反映しました（' + newPositions.length + '役職）', 'success');
 }
 
 async function viewPdf() {
@@ -1351,27 +1822,56 @@ async function viewPdf() {
   }
 }
 
+async function reSyncFromPdf() {
+  showToast('PDFを再読み込み中...', '');
+  try {
+    const { data } = await db.storage.from('documents').download('travel-regulation.pdf');
+    if (!data) { showToast('PDFの取得に失敗しました', 'error'); return; }
+
+    const file = new File([data], 'travel-regulation.pdf', { type: 'application/pdf' });
+    const pdfData = await parsePdfFile(file);
+
+    if (pdfData && (pdfData.positions.length > 0 || pdfData.travelTiers.length > 0)) {
+      showPdfExtractModal(pdfData);
+    } else {
+      showToast('旅費規定の情報を抽出できませんでした', 'error');
+    }
+  } catch (e) {
+    showToast('PDFの解析に失敗しました: ' + e.message, 'error');
+  }
+}
+
 async function deletePdf() {
-  if (!confirm('旅費規定PDFを削除しますか？')) return;
+  if (!confirm('旅費規定PDFを削除しますか？\n※役職設定もリセットされます。')) return;
 
   await db.storage.from('documents').remove(['travel-regulation.pdf']);
   await db.from('app_config').update({ pdf_filename: null, pdf_uploaded_at: null }).eq('id', 1);
 
+  hasPdf = false;
   showToast('PDFを削除しました', 'success');
   loadPdfInfo();
 }
 
-// ===== 管理パスワード =====
-async function saveAdminPassword() {
-  const pw = document.getElementById('pw-admin').value.trim();
-  if (!pw) { showToast('新しいパスワードを入力してください', 'error'); return; }
+// ===== 管理者一覧表示 =====
+function renderAdminUsers() {
+  const admins = employees.filter(e => e.is_admin);
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
 
-  const { error } = await db.from('app_config').update({ admin_password: pw }).eq('id', 1);
-  if (error) { showToast('更新に失敗しました', 'error'); return; }
+  if (admins.length === 0) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;">管理者が登録されていません</div>';
+    return;
+  }
 
-  CONFIG.adminPassword = pw;
-  document.getElementById('pw-admin').value = '';
-  showToast('パスワードを更新しました', 'success');
+  el.innerHTML = admins.map(e => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:10px;margin-bottom:8px;">
+      <div>
+        <div style="font-weight:600;font-size:14px;">${e.name} <span class="badge badge-blue">管理者</span></div>
+        <div style="font-size:12px;color:var(--text2);">ID: <span class="mono">${e.login_id}</span> / 役職: ${e.position}</div>
+      </div>
+      <button class="btn-sm btn-outline" onclick="openEditEmployee(${e.id})">編集</button>
+    </div>
+  `).join('');
 }
 
 // ===== トースト =====

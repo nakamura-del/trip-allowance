@@ -668,7 +668,6 @@ let CONFIG = {
         { min: 100, max: 200, label: '100km以上200km未満', allowance: 10000 },
         { min: 200, max: 9999, label: '200km以上', allowance: 20000 },
       ],
-      accommodation_allowance: 8700,
     }
   ]
 };
@@ -1480,21 +1479,6 @@ function renderPositionRates() {
     </div>`;
   }
 
-  // Accommodation limit (第12条)
-  if (readOnly) {
-    html += `<div class="tier-row" style="background:#f5f3ff;border-radius:10px;padding:12px;margin-top:8px;">
-      <div class="tier-label-cell"><div style="color:var(--accent2);font-weight:600;">宿泊費限度額（第12条）</div><div class="tier-range">1泊あたり</div></div>
-      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2);">&yen;${(pos.accommodation_allowance || 0).toLocaleString()}</div>
-      <div></div>
-    </div>`;
-  } else {
-    html += `<div class="tier-row" style="background:#f5f3ff;border-radius:10px;padding:12px;margin-top:8px;">
-      <div class="tier-label-cell"><div style="color:var(--accent2);font-weight:600;">宿泊費限度額（第12条）</div><div class="tier-range">1泊あたり</div></div>
-      <div><input type="number" class="tier-input" id="acc-allowance" value="${pos.accommodation_allowance || 0}" min="0" step="100"></div>
-      <div style="font-size:13px;color:var(--text2)">円</div>
-    </div>`;
-  }
-
   if (readOnly) {
     html += `<div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:10px;font-size:12px;color:var(--text2);">
       ※ 金額を変更するには、旅費規定PDFを更新してアップロードしてください。
@@ -1519,7 +1503,6 @@ async function savePositionRates() {
     t.allowance = parseInt(document.getElementById('tier-' + i).value) || 0;
   });
   pos.daily_allowance = parseInt(document.getElementById('daily-allowance').value) || 0;
-  pos.accommodation_allowance = parseInt(document.getElementById('acc-allowance').value) || 0;
 
   const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('id', 1);
   if (error) { showToast('保存に失敗しました', 'error'); return; }
@@ -1537,7 +1520,6 @@ function addPosition() {
   const newPos = {
     name: '新しい役職',
     travel_tiers: base.travel_tiers.map(t => ({ ...t, allowance: 0 })),
-    accommodation_allowance: 0,
   };
   CONFIG.positions.push(newPos);
   selectedPositionIdx = CONFIG.positions.length - 1;
@@ -1653,7 +1635,6 @@ async function parsePdfFile(file) {
 function parseTravelRegulation(text) {
   const result = {
     positions: [],
-    accommodationLimits: {},
     dailyAllowances: {},
     travelTiers: []
   };
@@ -1683,12 +1664,10 @@ function parseTravelRegulation(text) {
   const sec13 = text.match(/第\s*13\s*条[\s\S]*?(?=第\s*14\s*条)/);
   const sec15 = text.match(/第\s*15\s*条[\s\S]*?(?=第\s*16\s*条)/);
 
-  if (sec12) result.accommodationLimits = extractPositionAmounts(sec12[0]);
   if (sec13) result.dailyAllowances = extractPositionAmounts(sec13[0]);
 
   // Determine positions from extracted data
   const allPositions = new Set([
-    ...Object.keys(result.accommodationLimits),
     ...Object.keys(result.dailyAllowances)
   ]);
   result.positions = positionNames.filter(p => allPositions.has(p));
@@ -1739,14 +1718,12 @@ function showPdfExtractModal(data) {
 
   if (data.positions.length > 0) {
     html += '<div class="pdf-extract-section">';
-    html += '<div class="pdf-extract-section-title">役職別 宿泊費限度額・日当（第12条・第13条）</div>';
-    html += '<table class="pdf-extract-table"><thead><tr><th>役職</th><th>宿泊費限度額</th><th>日当</th></tr></thead><tbody>';
+    html += '<div class="pdf-extract-section-title">役職別 日当（第13条）</div>';
+    html += '<table class="pdf-extract-table"><thead><tr><th>役職</th><th>日当</th></tr></thead><tbody>';
     data.positions.forEach(pos => {
-      const acc = data.accommodationLimits[pos];
       const daily = data.dailyAllowances[pos];
       html += '<tr>';
       html += '<td style="font-weight:600">' + pos + '</td>';
-      html += '<td class="mono">' + (acc != null ? '&yen;' + acc.toLocaleString() : '—') + '</td>';
       html += '<td class="mono">' + (daily != null ? '&yen;' + daily.toLocaleString() : '—') + '</td>';
       html += '</tr>';
     });
@@ -1800,7 +1777,6 @@ async function applyPdfPositions() {
   const newPositions = data.positions.map(name => ({
     name: name,
     travel_tiers: travelTiers.map(t => ({...t})),
-    accommodation_allowance: data.accommodationLimits[name] || 0,
     daily_allowance: data.dailyAllowances[name] || 0,
   }));
 

@@ -624,7 +624,7 @@
         <div class="segment-view" id="view-accommodation">
 
           <div class="acc-rate-display">
-            <div class="acc-rate-label">あなたの宿泊費限度額</div>
+            <div class="acc-rate-label">あなたの宿泊日当</div>
             <div class="acc-rate-value" id="acc-rate">¥0</div>
           </div>
 
@@ -737,7 +737,7 @@ function getTravelTier(km) {
 
 function getAccommodationAllowance() {
   const pos = getPositionConfig();
-  return pos ? pos.accommodation_allowance || 0 : 0;
+  return pos ? pos.daily_allowance || 0 : 0;
 }
 
 // ===== 状態管理 =====

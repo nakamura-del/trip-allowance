@@ -518,11 +518,10 @@ let CONFIG = JSON.parse(localStorage.getItem('admin_config') || 'null') || {
   adminPassword: 'admin5678',
   mobilePassword: 'admin1234',
   tiers: [
-    { min: 0,   max: 8,   label: '8km未満',           allowance: 0 },
-    { min: 8,   max: 16,  label: '8km以上16km未満',   allowance: 1000 },
-    { min: 16,  max: 50,  label: '16km以上50km未満',  allowance: 2000 },
-    { min: 50,  max: 100, label: '50km以上100km未満', allowance: 3000 },
-    { min: 100, max: 9999,label: '100km以上',         allowance: 5000 },
+    { min: 0,   max: 50,  label: '50km未満',            allowance: 0 },
+    { min: 50,  max: 100, label: '50km以上100km未満',   allowance: 5000 },
+    { min: 100, max: 200, label: '100km以上200km未満',  allowance: 10000 },
+    { min: 200, max: 9999,label: '200km以上',           allowance: 20000 },
   ]
 };
 
@@ -839,7 +838,7 @@ function renderMonthly() {
 
 // ===== 距離帯設定 =====
 function renderTierSettings() {
-  const labels = ['8km未満', '8〜16km', '16〜50km', '50〜100km', '100km以上'];
+  const labels = ['50km未満', '50〜100km', '100〜200km', '200km以上'];
   document.getElementById('tier-settings').innerHTML = CONFIG.tiers.map((t, i) => `
     <div class="tier-row">
       <div class="tier-label-cell">

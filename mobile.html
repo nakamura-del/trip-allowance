@@ -424,8 +424,8 @@
     <input type="text" class="form-input" id="login-id" placeholder="login_id" autocomplete="username" style="font-size:15px;">
     <label class="form-label">パスワード</label>
     <div style="position:relative;">
-      <input type="text" class="form-input pw-mask" id="password-input" placeholder="••••••••" autocomplete="off" style="padding-right:44px;-webkit-text-security:disc;">
-      <button type="button" onclick="togglePw('password-input', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:4px 8px;color:var(--text3);">👁</button>
+      <input type="text" class="form-input pw-peek" id="password-input" placeholder="••••••••" autocomplete="off" data-pw="" style="padding-right:44px;">
+      <button type="button" onclick="togglePwPeek('password-input', this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:4px 8px;color:var(--text3);">👁</button>
     </div>
     <button class="btn-primary" onclick="login()">ログイン</button>
   </div>
@@ -736,26 +736,68 @@ function todayStr() {
 }
 
 // ===== ログイン =====
-function togglePw(id, btn) {
-  const input = document.getElementById(id);
-  const masked = input.style.webkitTextSecurity === 'disc';
-  input.style.webkitTextSecurity = masked ? 'none' : 'disc';
-  btn.textContent = masked ? '🙈' : '👁';
+// パスワード入力：最後の1文字だけ表示、前の文字は●
+function setupPwPeek(input) {
+  let realPw = '';
+  let timer = null;
+  let showAll = false;
+
+  function render(showLast) {
+    if (showAll) { input.value = realPw; return; }
+    if (realPw.length === 0) { input.value = ''; return; }
+    if (showLast) {
+      input.value = '●'.repeat(realPw.length - 1) + realPw.slice(-1);
+    } else {
+      input.value = '●'.repeat(realPw.length);
+    }
+  }
+
+  input.addEventListener('input', () => {
+    if (showAll) { realPw = input.value; input.dataset.pw = realPw; return; }
+    const v = input.value;
+    const maskCount = (v.match(/●/g) || []).length;
+    const plainChars = v.replace(/●/g, '');
+
+    if (v.length < realPw.length && plainChars.length === 0) {
+      // 削除
+      const deleteCount = realPw.length - v.length;
+      const pos = input.selectionStart;
+      realPw = realPw.slice(0, pos) + realPw.slice(pos + deleteCount);
+    } else if (plainChars.length > 0) {
+      // 入力
+      const pos = input.selectionStart;
+      const insertPos = pos - plainChars.length;
+      const beforeMask = realPw.length - (v.length - plainChars.length);
+      realPw = realPw.slice(0, insertPos) + plainChars + realPw.slice(insertPos + Math.max(0, beforeMask));
+    }
+    input.dataset.pw = realPw;
+    clearTimeout(timer);
+    render(true);
+    const cursorPos = input.selectionStart;
+    timer = setTimeout(() => {
+      render(false);
+      input.setSelectionRange(cursorPos, cursorPos);
+    }, 600);
+  });
+
+  input._pwShowAll = (show) => { showAll = show; render(!show); };
+  input._getPw = () => realPw;
+  input._resetPw = () => { realPw = ''; input.value = ''; input.dataset.pw = ''; };
 }
 
-// 入力直後の1文字を一瞬表示
-document.querySelectorAll('.pw-mask').forEach(input => {
-  let timer = null;
-  input.addEventListener('input', () => {
-    input.style.webkitTextSecurity = 'none';
-    clearTimeout(timer);
-    timer = setTimeout(() => { input.style.webkitTextSecurity = 'disc'; }, 500);
-  });
-});
+function togglePwPeek(id, btn) {
+  const input = document.getElementById(id);
+  const isHidden = btn.textContent === '👁';
+  input._pwShowAll(isHidden);
+  btn.textContent = isHidden ? '🙈' : '👁';
+}
+
+document.querySelectorAll('.pw-peek').forEach(setupPwPeek);
 
 async function login() {
   const loginId = document.getElementById('login-id').value.trim();
-  const pw = document.getElementById('password-input').value;
+  const pwInput = document.getElementById('password-input');
+  const pw = pwInput._getPw ? pwInput._getPw() : pwInput.value;
 
   if (!loginId || !pw) {
     showToast('ログインIDとパスワードを入力してください', 'error');
@@ -804,7 +846,8 @@ function logout() {
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('main-screen').style.display = 'none';
   document.getElementById('login-id').value = '';
-  document.getElementById('password-input').value = '';
+  const pwEl = document.getElementById('password-input');
+  if (pwEl._resetPw) pwEl._resetPw(); else pwEl.value = '';
   currentEmployee = null;
   resetState();
 }

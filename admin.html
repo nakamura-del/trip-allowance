@@ -483,7 +483,8 @@
                 <th>種別</th>
                 <th>距離/ホテル</th>
                 <th>区分</th>
-                <th>日当</th>
+                <th>移動日当</th>
+                <th>宿泊日当</th>
                 <th>目的</th>
                 <th>操作</th>
               </tr>
@@ -1054,16 +1055,19 @@ async function renderDashboard() {
   } else {
     document.getElementById('recent-table-wrap').innerHTML = `
       <table>
-        <thead><tr><th>日付</th><th>従業員</th><th>種別</th><th>距離/ホテル</th><th>日当</th><th>目的</th></tr></thead>
+        <thead><tr><th>日付</th><th>従業員</th><th>種別</th><th>距離/ホテル</th><th>移動日当</th><th>宿泊日当</th><th>目的</th></tr></thead>
         <tbody>
           ${recent.map(r => {
             const isTravel = r.record_type === 'travel';
+            const tAllow = isTravel ? r.allowance : 0;
+            const aAllow = !isTravel ? r.allowance : 0;
             return `<tr>
               <td class="mono">${r.date}</td>
               <td>${r.employee_name || '—'}</td>
               <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '宿泊'}</span></td>
               <td class="mono">${isTravel ? r.distance + ' km' : (r.hotel_name || '—')}</td>
-              <td class="${r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外'}</td>
+              <td class="${tAllow > 0 ? 'allowance-pos' : 'allowance-zero'}">${tAllow > 0 ? '¥'+tAllow.toLocaleString() : '—'}</td>
+              <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">${aAllow > 0 ? '¥'+aAllow.toLocaleString() : '—'}</td>
               <td style="color:var(--text2)">${r.purpose || '—'}</td>
             </tr>`;
           }).join('')}
@@ -1121,7 +1125,8 @@ async function renderRecords() {
         <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '宿泊'}</span></td>
         <td class="mono">${isTravel ? r.distance + ' km' : (r.hotel_name || '—')}</td>
         <td>${isTravel ? '<span class="badge badge-blue">' + (r.tier || '') + '</span>' : ''}</td>
-        <td class="${r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外'}</td>
+        <td class="${isTravel && r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${isTravel ? (r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外') : '—'}</td>
+        <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">${!isTravel ? (r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外') : '—'}</td>
         <td>
           ${r.purpose || '<span style="color:var(--text3)">—</span>'}
           ${hasEdit ? '<span class="edit-badge">編集済</span>' : ''}
@@ -1259,7 +1264,7 @@ async function exportCSV() {
 
   if (records.length === 0) { showToast('データがありません', 'error'); return; }
 
-  const headers = ['日付', '従業員名', '役職', '種別', '出発時刻', '到着時刻', '距離(km)', '区分', '日当(円)', 'ホテル名', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
+  const headers = ['日付', '従業員名', '役職', '種別', '出発時刻', '到着時刻', '距離(km)', '区分', '移動日当(円)', '宿泊日当(円)', 'ホテル名', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
 
   const rows = records.map(r => [
     r.date,
@@ -1270,7 +1275,8 @@ async function exportCSV() {
     r.arrive_time ? new Date(r.arrive_time).toLocaleTimeString('ja-JP') : '',
     r.distance,
     r.tier || '',
-    r.allowance,
+    r.record_type === 'travel' ? r.allowance : 0,
+    r.record_type === 'accommodation' ? r.allowance : 0,
     r.hotel_name || '',
     r.purpose || '',
     r.person || '',

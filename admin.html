@@ -895,7 +895,7 @@ async function getAllRecords() {
 // ===== セットアップガイド =====
 function renderSetupGuide() {
   const guide = document.getElementById('setup-guide');
-  const step1Done = hasPdf && CONFIG.positions.some(p => p.daily_allowance > 0);
+  const step1Done = hasPdf;
   const step2Done = employees.length > 1; // more than just admin
   const step3Ready = step1Done && step2Done;
   const allDone = step3Ready;

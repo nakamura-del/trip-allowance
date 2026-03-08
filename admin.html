@@ -568,6 +568,15 @@
       </div>
 
       <div class="settings-card">
+        <div class="settings-title">会社情報</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <label style="font-size:13px;font-weight:600;white-space:nowrap;">会社名</label>
+          <input type="text" id="company-name-input" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:'Noto Sans JP',sans-serif;" placeholder="会社名を入力">
+          <button class="btn-sm btn-accent" onclick="saveCompanyName()">保存</button>
+        </div>
+      </div>
+
+      <div class="settings-card">
         <div class="settings-title">管理者アカウント</div>
         <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">
           管理者権限を持つ従業員のみ管理画面にログインできます。<br>
@@ -1473,7 +1482,20 @@ async function deleteEmployee(id, name) {
 }
 
 // ===== 旅費規定設定 =====
+async function saveCompanyName() {
+  const name = document.getElementById('company-name-input').value.trim();
+  if (!name) { showToast('会社名を入力してください', 'error'); return; }
+  const { error } = await db.from('companies').update({ company_name: name }).eq('company_code', currentCompanyCode);
+  if (error) { showToast('保存に失敗しました: ' + error.message, 'error'); return; }
+  currentCompanyName = name;
+  document.getElementById('sidebar-company-name').textContent = name;
+  showToast('会社名を保存しました');
+}
+
 function renderSettings() {
+  // 会社名
+  document.getElementById('company-name-input').value = currentCompanyName;
+
   // No-PDF warning
   document.getElementById('no-pdf-warning').style.display = hasPdf ? 'none' : 'block';
 

@@ -392,72 +392,115 @@
 
   /* === 新幹線アニメーション === */
   .train-scene {
-    display: none; position: relative; height: 100px; margin: 16px 0;
-    background: linear-gradient(180deg, #e8f4fd 0%, #d4eaf7 70%, #ddd 70%, #ddd 100%);
-    border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+    display: none; position: relative; height: 110px; margin: 16px 0;
+    background: linear-gradient(180deg, #87CEEB 0%, #B0E0F6 40%, #e0f0e8 65%, #c8d8c0 72%, #999 72%, #888 100%);
+    border-radius: 16px; overflow: hidden; border: 1px solid var(--border);
   }
   .train-scene.active { display: block; }
 
+  /* 富士山シルエット */
+  .train-scene::before {
+    content: ''; position: absolute; bottom: 32px; left: 15%;
+    width: 0; height: 0;
+    border-left: 60px solid transparent; border-right: 60px solid transparent;
+    border-bottom: 45px solid rgba(100,130,160,0.15);
+    z-index: 0;
+  }
+  .train-scene::after {
+    content: ''; position: absolute; bottom: 67px; left: calc(15% + 30px);
+    width: 0; height: 0;
+    border-left: 15px solid transparent; border-right: 15px solid transparent;
+    border-bottom: 10px solid rgba(255,255,255,0.6);
+    z-index: 0;
+  }
+
   /* レール */
   .train-rail {
-    position: absolute; bottom: 12px; left: 0; right: 0; height: 4px;
-    background: #999;
+    position: absolute; bottom: 10px; left: 0; right: 0; height: 3px;
+    background: linear-gradient(180deg, #666 0%, #888 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    z-index: 2;
+  }
+  .train-rail::before {
+    content: ''; position: absolute; top: -3px; left: 0; right: 0; height: 3px;
+    background: linear-gradient(180deg, #777 0%, #999 100%);
   }
   .train-rail::after {
-    content: ''; position: absolute; top: 4px; left: 0; right: 0; height: 2px;
-    background: repeating-linear-gradient(90deg, #888 0, #888 20px, transparent 20px, transparent 30px);
-    animation: railScroll 0.4s linear infinite;
+    content: ''; position: absolute; top: 3px; left: 0; right: 0; height: 2px;
+    background: repeating-linear-gradient(90deg, #777 0, #777 16px, transparent 16px, transparent 24px);
+    animation: railScroll 0.3s linear infinite;
   }
   .train-scene.stopping .train-rail::after {
-    animation: railScroll 2s linear infinite;
+    animation: railScroll 1.5s linear infinite;
   }
   @keyframes railScroll {
     0% { transform: translateX(0); }
-    100% { transform: translateX(-30px); }
+    100% { transform: translateX(-24px); }
   }
 
   /* 新幹線 */
   .shinkansen {
-    position: absolute; bottom: 16px; left: -400px;
-    animation: trainRun 2.5s ease-out forwards;
+    position: absolute; bottom: 14px; left: -420px; z-index: 3;
+    animation: trainRun 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25));
   }
   .train-scene.running .shinkansen {
-    left: calc(50% - 190px);
-    animation: trainLoop 2s linear infinite;
+    left: calc(50% - 200px);
+    animation: trainLoop 1.5s ease-in-out infinite;
   }
   .train-scene.stopping .shinkansen {
     animation: trainStop 2s ease-out forwards;
   }
   @keyframes trainRun {
-    0% { left: -400px; }
-    100% { left: calc(50% - 190px); }
+    0% { left: -420px; }
+    100% { left: calc(50% - 200px); }
   }
   @keyframes trainLoop {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(6px); }
-    100% { transform: translateX(0); }
+    0% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(4px) translateY(-0.5px); }
+    50% { transform: translateX(6px) translateY(0); }
+    75% { transform: translateX(4px) translateY(0.5px); }
+    100% { transform: translateX(0) translateY(0); }
   }
   @keyframes trainStop {
-    0% { opacity: 1; left: calc(50% - 190px); }
-    60% { opacity: 1; left: calc(50% - 180px); }
-    100% { opacity: 0; left: calc(50% - 170px); }
+    0% { opacity: 1; left: calc(50% - 200px); }
+    60% { opacity: 1; left: calc(50% - 190px); }
+    100% { opacity: 0; left: calc(50% - 180px); }
+  }
+
+  /* スピードライン */
+  .train-speed-lines {
+    position: absolute; bottom: 20px; left: 0; right: 0; height: 30px;
+    z-index: 1; opacity: 0.4;
+  }
+  .train-speed-lines::before, .train-speed-lines::after {
+    content: ''; position: absolute; height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8), transparent);
+    animation: speedLine 0.6s linear infinite;
+  }
+  .train-speed-lines::before { top: 8px; left: 0; width: 60px; animation-delay: 0s; }
+  .train-speed-lines::after { top: 20px; left: 10%; width: 40px; animation-delay: 0.3s; }
+  .train-scene.stopping .train-speed-lines { opacity: 0; transition: opacity 1s; }
+  @keyframes speedLine {
+    0% { transform: translateX(100vw); opacity: 1; }
+    100% { transform: translateX(-100px); opacity: 0; }
   }
 
   /* 風景（流れる背景） */
   .train-scenery {
-    position: absolute; bottom: 16px; left: 0; right: 0; height: 50px;
+    position: absolute; bottom: 14px; left: 0; right: 0; height: 60px; z-index: 1;
     background: repeating-linear-gradient(90deg,
-      transparent 0, transparent 80px,
-      rgba(0,0,0,0.04) 80px, rgba(0,0,0,0.04) 82px
+      transparent 0, transparent 100px,
+      rgba(0,0,0,0.03) 100px, rgba(0,0,0,0.03) 102px
     );
-    animation: sceneryFlow 1.5s linear infinite;
+    animation: sceneryFlow 1.2s linear infinite;
   }
   .train-scene.stopping .train-scenery {
-    animation: sceneryFlow 6s linear infinite;
+    animation: sceneryFlow 5s linear infinite;
   }
   @keyframes sceneryFlow {
     0% { transform: translateX(0); }
-    100% { transform: translateX(-82px); }
+    100% { transform: translateX(-102px); }
   }
 </style>
 </head>
@@ -536,81 +579,154 @@
           <!-- 新幹線アニメーション -->
           <div class="train-scene" id="scene-train">
             <div class="train-scenery"></div>
+            <div class="train-speed-lines"></div>
             <div class="train-rail"></div>
-            <svg class="shinkansen" width="380" height="50" viewBox="0 0 380 50">
-              <!-- === 1号車（先頭） === -->
-              <path d="M0,38 Q0,26 20,22 L20,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <rect x="20" y="16" width="48" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <path d="M2,30 Q2,26 20,24 L20,28 Z" fill="#c0392b"/>
-              <rect x="20" y="24" width="48" height="4" fill="#c0392b"/>
-              <rect x="26" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="37" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="48" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="59" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <circle cx="5" cy="30" r="2" fill="#ffdd44" stroke="#e6c200" stroke-width="0.5"/>
-              <rect x="20" y="13" width="48" height="4" rx="2" fill="#e0e0e0"/>
-              <circle cx="30" cy="40" r="2.5" fill="#555"/>
-              <circle cx="55" cy="40" r="2.5" fill="#555"/>
+            <svg class="shinkansen" width="400" height="55" viewBox="0 0 400 55">
+              <defs>
+                <linearGradient id="bodyGreen" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#1a8a4a"/>
+                  <stop offset="40%" stop-color="#1b9e50"/>
+                  <stop offset="100%" stop-color="#17854a"/>
+                </linearGradient>
+                <linearGradient id="bodyWhite" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f8f8f8"/>
+                  <stop offset="100%" stop-color="#e8e8e8"/>
+                </linearGradient>
+                <linearGradient id="windowGlass" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#c8e6ff"/>
+                  <stop offset="100%" stop-color="#88c8ee"/>
+                </linearGradient>
+                <linearGradient id="roofGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ccc"/>
+                  <stop offset="100%" stop-color="#b0b0b0"/>
+                </linearGradient>
+                <linearGradient id="noseGreen" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#17854a"/>
+                  <stop offset="100%" stop-color="#1b9e50"/>
+                </linearGradient>
+                <filter id="trainShadow"><feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.15"/></filter>
+              </defs>
+
+              <!-- === 1号車（先頭・ロングノーズ） === -->
+              <!-- ノーズ下半分（白） -->
+              <path d="M2,40 C4,38 10,34 18,32 L18,28 C12,30 6,34 2,38 Z" fill="url(#bodyWhite)"/>
+              <path d="M18,28 L18,40 L55,40 L55,28 Z" fill="url(#bodyWhite)"/>
+              <!-- ノーズ上半分（緑） -->
+              <path d="M18,18 C14,20 8,24 4,28 L4,32 C8,28 14,24 18,22 Z" fill="url(#noseGreen)"/>
+              <path d="M18,14 L18,28 L55,28 L55,14 Z" fill="url(#bodyGreen)"/>
+              <!-- ピンクストライプ -->
+              <path d="M6,31 C10,28 16,26 18,25.5 L18,27 C14,27.5 8,30 5,33 Z" fill="#e83e72"/>
+              <rect x="18" y="25.5" width="37" height="2.5" fill="#e83e72"/>
+              <!-- ヘッドライト -->
+              <circle cx="8" cy="32" r="1.8" fill="#fff4b0" stroke="#e6d200" stroke-width="0.5">
+                <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+              </circle>
+              <!-- 屋根 -->
+              <rect x="18" y="11" width="37" height="4" rx="2" fill="url(#roofGrad)"/>
+              <!-- 窓 -->
+              <rect x="24" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="35" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="46" y="17" width="6" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <!-- 台車・車輪 -->
+              <rect x="22" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="26" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="33" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <rect x="42" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="46" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="53" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
 
               <!-- 連結1 -->
-              <rect x="68" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+              <rect x="55" y="17" width="5" height="23" rx="1" fill="#999"/>
 
               <!-- === 2号車 === -->
-              <rect x="74" y="16" width="56" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <rect x="74" y="24" width="56" height="4" fill="#c0392b"/>
-              <rect x="80" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="91" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="102" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="113" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="74" y="13" width="56" height="4" rx="2" fill="#e0e0e0"/>
-              <circle cx="86" cy="40" r="2.5" fill="#555"/>
-              <circle cx="118" cy="40" r="2.5" fill="#555"/>
+              <rect x="60" y="28" width="70" height="12" rx="1" fill="url(#bodyWhite)"/>
+              <rect x="60" y="14" width="70" height="14" rx="1" fill="url(#bodyGreen)"/>
+              <rect x="60" y="25.5" width="70" height="2.5" fill="#e83e72"/>
+              <rect x="60" y="11" width="70" height="4" rx="2" fill="url(#roofGrad)"/>
+              <rect x="66" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="78" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="90" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="102" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="114" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <!-- ドア -->
+              <rect x="86" y="16" width="4" height="24" rx="0.5" fill="#ddd" stroke="#bbb" stroke-width="0.3"/>
+              <!-- 台車 -->
+              <rect x="66" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="70" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="77" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <rect x="108" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="112" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="119" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
 
               <!-- 連結2 -->
-              <rect x="130" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+              <rect x="130" y="17" width="5" height="23" rx="1" fill="#999"/>
 
               <!-- === 3号車 === -->
-              <rect x="136" y="16" width="56" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <rect x="136" y="24" width="56" height="4" fill="#c0392b"/>
-              <rect x="142" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="153" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="164" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="175" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="136" y="13" width="56" height="4" rx="2" fill="#e0e0e0"/>
-              <circle cx="148" cy="40" r="2.5" fill="#555"/>
-              <circle cx="180" cy="40" r="2.5" fill="#555"/>
+              <rect x="135" y="28" width="70" height="12" rx="1" fill="url(#bodyWhite)"/>
+              <rect x="135" y="14" width="70" height="14" rx="1" fill="url(#bodyGreen)"/>
+              <rect x="135" y="25.5" width="70" height="2.5" fill="#e83e72"/>
+              <rect x="135" y="11" width="70" height="4" rx="2" fill="url(#roofGrad)"/>
+              <rect x="141" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="153" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="165" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="177" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="189" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="161" y="16" width="4" height="24" rx="0.5" fill="#ddd" stroke="#bbb" stroke-width="0.3"/>
+              <rect x="141" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="145" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="152" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <rect x="183" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="187" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="194" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
 
               <!-- 連結3 -->
-              <rect x="192" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+              <rect x="205" y="17" width="5" height="23" rx="1" fill="#999"/>
 
               <!-- === 4号車 === -->
-              <rect x="198" y="16" width="56" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <rect x="198" y="24" width="56" height="4" fill="#c0392b"/>
-              <rect x="204" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="215" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="226" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="237" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="198" y="13" width="56" height="4" rx="2" fill="#e0e0e0"/>
-              <circle cx="210" cy="40" r="2.5" fill="#555"/>
-              <circle cx="242" cy="40" r="2.5" fill="#555"/>
+              <rect x="210" y="28" width="70" height="12" rx="1" fill="url(#bodyWhite)"/>
+              <rect x="210" y="14" width="70" height="14" rx="1" fill="url(#bodyGreen)"/>
+              <rect x="210" y="25.5" width="70" height="2.5" fill="#e83e72"/>
+              <rect x="210" y="11" width="70" height="4" rx="2" fill="url(#roofGrad)"/>
+              <rect x="216" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="228" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="240" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="252" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="264" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="236" y="16" width="4" height="24" rx="0.5" fill="#ddd" stroke="#bbb" stroke-width="0.3"/>
+              <rect x="216" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="220" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="227" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <rect x="258" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="262" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="269" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
 
               <!-- 連結4 -->
-              <rect x="254" y="18" width="6" height="18" rx="1" fill="#bbb" stroke="#999" stroke-width="0.5"/>
+              <rect x="280" y="17" width="5" height="23" rx="1" fill="#999"/>
 
-              <!-- === 5号車（後尾） === -->
-              <rect x="260" y="16" width="48" height="22" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <path d="M380,38 Q380,26 360,22 L360,38 Z" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
-              <rect x="260" y="24" width="100" height="4" fill="#c0392b"/>
-              <path d="M378,30 Q378,26 360,24 L360,28 Z" fill="#c0392b"/>
-              <rect x="266" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="277" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="288" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <rect x="299" y="18" width="7" height="5" rx="1" fill="#a8d8ea" stroke="#999" stroke-width="0.3"/>
-              <circle cx="375" cy="30" r="2" fill="#e74c3c" stroke="#c0392b" stroke-width="0.5"/>
-              <rect x="260" y="13" width="100" height="4" rx="2" fill="#e0e0e0"/>
-              <circle cx="272" cy="40" r="2.5" fill="#555"/>
-              <circle cx="304" cy="40" r="2.5" fill="#555"/>
-              <circle cx="350" cy="40" r="2.5" fill="#555"/>
+              <!-- === 5号車（後尾・ロングノーズ） === -->
+              <rect x="285" y="28" width="55" height="12" rx="1" fill="url(#bodyWhite)"/>
+              <rect x="285" y="14" width="55" height="14" rx="1" fill="url(#bodyGreen)"/>
+              <rect x="285" y="25.5" width="55" height="2.5" fill="#e83e72"/>
+              <!-- 後尾ノーズ（白） -->
+              <path d="M340,28 L340,40 C346,38 354,34 360,32 L360,28 Z" fill="url(#bodyWhite)"/>
+              <!-- 後尾ノーズ（緑） -->
+              <path d="M340,14 L340,28 L360,28 C356,24 350,20 340,18 Z" fill="url(#bodyGreen)"/>
+              <!-- 後尾ピンクストライプ -->
+              <rect x="285" y="25.5" width="55" height="2.5" fill="#e83e72"/>
+              <path d="M340,25.5 L340,28 C350,26 356,24 360,28 L360,26 C354,24 348,25 340,25.5 Z" fill="#e83e72"/>
+              <!-- テールライト -->
+              <circle cx="358" cy="30" r="1.5" fill="#ff4444" stroke="#cc0000" stroke-width="0.5"/>
+              <rect x="285" y="11" width="55" height="4" rx="2" fill="url(#roofGrad)"/>
+              <rect x="291" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="303" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="315" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="327" y="17" width="8" height="7" rx="1.5" fill="url(#windowGlass)" stroke="#999" stroke-width="0.3"/>
+              <rect x="291" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="295" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="302" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <rect x="325" y="40" width="14" height="3" rx="1" fill="#666"/>
+              <circle cx="329" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
+              <circle cx="336" cy="44" r="2.5" fill="#444" stroke="#333" stroke-width="0.5"/>
             </svg>
           </div>
 

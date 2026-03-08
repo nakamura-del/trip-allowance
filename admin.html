@@ -373,6 +373,8 @@
       <div class="login-title">出張日当管理</div>
       <div class="login-sub">ログインしてください</div>
     </div>
+    <label class="form-label">会社コード</label>
+    <input type="text" class="form-input" id="admin-company-code" placeholder="会社コード" autocomplete="organization" style="font-family:'DM Mono',monospace;">
     <label class="form-label">ログインID</label>
     <input type="text" class="form-input" id="admin-login-id" placeholder="login_id" autocomplete="username">
     <label class="form-label">パスワード</label>
@@ -389,7 +391,10 @@
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">🗂️</div>
-      <div class="sidebar-logo-text">出張日当管理</div>
+      <div>
+        <div class="sidebar-logo-text">出張日当管理</div>
+        <div id="sidebar-company-name" style="font-size:11px;color:var(--text2);margin-top:2px;"></div>
+      </div>
     </div>
 
     <button class="nav-item active" onclick="showPage('dashboard', this)">
@@ -678,9 +683,12 @@ let editingId = null;
 let editingEmpId = null;
 let selectedPositionIdx = 0;
 let hasPdf = false;
+let currentCompanyCode = null;
+let currentCompanyName = '';
 
 async function loadConfig() {
-  const { data } = await db.from('app_config').select('*').eq('id', 1).single();
+  if (!currentCompanyCode) return;
+  const { data } = await db.from('app_config').select('*').eq('company_code', currentCompanyCode).single();
   if (data) {
     CONFIG.adminPassword = data.admin_password;
     if (data.positions) CONFIG.positions = data.positions;
@@ -688,7 +696,8 @@ async function loadConfig() {
 }
 
 async function loadEmployees() {
-  const { data } = await db.from('employees').select('*').order('id');
+  if (!currentCompanyCode) return;
+  const { data } = await db.from('employees').select('*').eq('company_code', currentCompanyCode).order('id');
   employees = data || [];
 }
 
@@ -751,26 +760,39 @@ function togglePwPeek(id, btn) {
 document.querySelectorAll('.pw-peek').forEach(setupPwPeek);
 
 async function adminLogin() {
+  const companyCode = document.getElementById('admin-company-code').value.trim();
   const loginId = document.getElementById('admin-login-id').value.trim();
   const pwInput = document.getElementById('admin-pw');
   const pw = pwInput._getPw ? pwInput._getPw() : pwInput.value;
 
-  if (!loginId || !pw) {
-    showToast('ログインIDとパスワードを入力してください', 'error');
+  if (!companyCode || !loginId || !pw) {
+    showToast('会社コード・ログインID・パスワードを入力してください', 'error');
     return;
   }
 
+  // 会社コード検証
+  const { data: company } = await db.from('companies').select('*').eq('company_code', companyCode).single();
+  if (!company) {
+    showToast('会社コードが見つかりません', 'error');
+    return;
+  }
+
+  currentCompanyCode = companyCode;
+  currentCompanyName = company.company_name;
   await loadConfig();
 
   const { data, error } = await db
     .from('employees')
     .select('*')
+    .eq('company_code', companyCode)
     .eq('login_id', loginId)
     .eq('password', pw)
     .single();
 
   if (!data) {
     showToast('ログインIDまたはパスワードが違います', 'error');
+    currentCompanyCode = null;
+    currentCompanyName = '';
     return;
   }
 
@@ -778,6 +800,7 @@ async function adminLogin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-screen').style.display = 'block';
   document.getElementById('admin-user-info').textContent = currentAdmin.name + '（' + currentAdmin.position + '）';
+  document.getElementById('sidebar-company-name').textContent = currentCompanyName;
 
   // 管理者以外はメニューを制限
   const isAdmin = currentAdmin.is_admin;
@@ -799,8 +822,11 @@ document.getElementById('admin-pw').addEventListener('keypress', e => {
 
 function adminLogout() {
   currentAdmin = null;
+  currentCompanyCode = null;
+  currentCompanyName = '';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('admin-company-code').value = '';
   document.getElementById('admin-login-id').value = '';
   document.getElementById('admin-pw').value = '';
 }
@@ -828,12 +854,14 @@ function populateEmployeeFilter() {
 
 // ===== データ取得 =====
 async function getMonthRecords(year, month) {
+  if (!currentCompanyCode) return [];
   const startDate = `${year}-${String(month+1).padStart(2,'0')}-01`;
   const nextMonth = month === 11
     ? `${year+1}-01-01`
     : `${year}-${String(month+2).padStart(2,'0')}-01`;
 
   let query = db.from('trip_records').select('*')
+    .eq('company_code', currentCompanyCode)
     .gte('date', startDate).lt('date', nextMonth)
     .order('date', { ascending: false });
 
@@ -842,7 +870,10 @@ async function getMonthRecords(year, month) {
 }
 
 async function getAllRecords() {
-  const { data } = await db.from('trip_records').select('*').order('date', { ascending: false });
+  if (!currentCompanyCode) return [];
+  const { data } = await db.from('trip_records').select('*')
+    .eq('company_code', currentCompanyCode)
+    .order('date', { ascending: false });
   return data || [];
 }
 
@@ -897,7 +928,7 @@ function renderSetupGuide() {
             <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:${step3Ready ? 'var(--text)' : 'var(--text3)'};">従業員がスマホから利用開始</div>
             <div style="font-size:12px;color:var(--text2);line-height:1.6;">
               従業員はスマートフォンで以下URLにアクセスし、<br>
-              登録したログインID・パスワードでログインします。<br>
+              会社コード「<strong>${currentCompanyCode}</strong>」と登録したログインID・パスワードでログインします。<br>
               ${step3Ready ? '<code style="background:var(--surface2);padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;margin-top:4px;">' + location.origin + '/mobile.html</code>' : ''}
             </div>
           </div>
@@ -1415,7 +1446,7 @@ async function saveEmployee() {
     showToast('従業員を更新しました', 'success');
   } else {
     const { error } = await db.from('employees')
-      .insert({ name, position, login_id: loginId, password, is_admin: isAdmin });
+      .insert({ company_code: currentCompanyCode, name, position, login_id: loginId, password, is_admin: isAdmin });
     if (error) {
       showToast('追加に失敗しました: ' + (error.message.includes('duplicate') ? 'ログインIDが重複しています' : error.message), 'error');
       return;
@@ -1553,7 +1584,7 @@ async function savePositionRates() {
   });
   pos.daily_allowance = parseInt(document.getElementById('daily-allowance').value) || 0;
 
-  const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('id', 1);
+  const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('company_code', currentCompanyCode);
   if (error) { showToast('保存に失敗しました', 'error'); return; }
 
   showToast('旅費規定を保存しました', 'success');
@@ -1586,7 +1617,7 @@ async function removePosition(idx) {
   CONFIG.positions.splice(idx, 1);
   if (selectedPositionIdx >= CONFIG.positions.length) selectedPositionIdx = CONFIG.positions.length - 1;
 
-  const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('id', 1);
+  const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('company_code', currentCompanyCode);
   if (error) { showToast('保存に失敗しました', 'error'); return; }
 
   showToast('役職を削除しました', 'success');
@@ -1595,7 +1626,8 @@ async function removePosition(idx) {
 
 // ===== 旅費規定PDF =====
 async function loadPdfInfo() {
-  const { data } = await db.from('app_config').select('pdf_filename, pdf_uploaded_at').eq('id', 1).single();
+  if (!currentCompanyCode) return;
+  const { data } = await db.from('app_config').select('pdf_filename, pdf_uploaded_at').eq('company_code', currentCompanyCode).single();
   const uploadArea = document.getElementById('pdf-upload-area');
   const currentArea = document.getElementById('pdf-current');
 
@@ -1637,7 +1669,7 @@ async function uploadPdf(file) {
     console.warn('PDF parsing failed:', e);
   }
 
-  const path = 'travel-regulation.pdf';
+  const path = currentCompanyCode + '/travel-regulation.pdf';
   const { error: uploadErr } = await db.storage.from('documents').upload(path, file, { upsert: true });
 
   if (uploadErr) {
@@ -1650,7 +1682,7 @@ async function uploadPdf(file) {
   await db.from('app_config').update({
     pdf_filename: file.name,
     pdf_uploaded_at: new Date().toISOString()
-  }).eq('id', 1);
+  }).eq('company_code', currentCompanyCode);
 
   document.getElementById('pdf-uploading').style.display = 'none';
   document.getElementById('pdf-file-input').value = '';
@@ -1836,7 +1868,7 @@ async function applyPdfPositions() {
 
   CONFIG.positions = newPositions;
 
-  const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('id', 1);
+  const { error } = await db.from('app_config').update({ positions: CONFIG.positions }).eq('company_code', currentCompanyCode);
   if (error) {
     showToast('設定の保存に失敗しました', 'error');
     return;
@@ -1849,7 +1881,7 @@ async function applyPdfPositions() {
 }
 
 async function viewPdf() {
-  const { data } = await db.storage.from('documents').createSignedUrl('travel-regulation.pdf', 300);
+  const { data } = await db.storage.from('documents').createSignedUrl(currentCompanyCode + '/travel-regulation.pdf', 300);
   if (data && data.signedUrl) {
     window.open(data.signedUrl, '_blank');
   } else {
@@ -1860,7 +1892,7 @@ async function viewPdf() {
 async function reSyncFromPdf() {
   showToast('PDFを再読み込み中...', '');
   try {
-    const { data } = await db.storage.from('documents').download('travel-regulation.pdf');
+    const { data } = await db.storage.from('documents').download(currentCompanyCode + '/travel-regulation.pdf');
     if (!data) { showToast('PDFの取得に失敗しました', 'error'); return; }
 
     const file = new File([data], 'travel-regulation.pdf', { type: 'application/pdf' });
@@ -1879,8 +1911,8 @@ async function reSyncFromPdf() {
 async function deletePdf() {
   if (!confirm('旅費規定PDFを削除しますか？\n※役職設定もリセットされます。')) return;
 
-  await db.storage.from('documents').remove(['travel-regulation.pdf']);
-  await db.from('app_config').update({ pdf_filename: null, pdf_uploaded_at: null }).eq('id', 1);
+  await db.storage.from('documents').remove([currentCompanyCode + '/travel-regulation.pdf']);
+  await db.from('app_config').update({ pdf_filename: null, pdf_uploaded_at: null }).eq('company_code', currentCompanyCode);
 
   hasPdf = false;
   showToast('PDFを削除しました', 'success');

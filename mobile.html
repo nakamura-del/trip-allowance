@@ -430,6 +430,8 @@
     <div class="logo-sub">TRAVEL ALLOWANCE TRACKER</div>
   </div>
   <div class="login-card">
+    <label class="form-label">会社コード</label>
+    <input type="text" class="form-input" id="company-code" placeholder="会社コード" autocomplete="organization" style="font-size:15px;font-family:'DM Mono',monospace;">
     <label class="form-label">ログインID</label>
     <input type="text" class="form-input" id="login-id" placeholder="login_id" autocomplete="username" style="font-size:15px;">
     <label class="form-label">パスワード</label>
@@ -449,6 +451,7 @@
 <div id="main-screen">
   <div class="top-bar">
     <div>
+      <div id="top-bar-company" style="font-size:10px;color:var(--text3);letter-spacing:0.1em;"></div>
       <div class="top-bar-user">
         <span id="user-name"></span>
         <span class="top-bar-position" id="user-position"></span>
@@ -715,9 +718,12 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ===== 設定 =====
 let CONFIG = { positions: [] };
 let currentEmployee = null;
+let currentCompanyCode = null;
+let currentCompanyName = '';
 
 async function loadConfig() {
-  const { data } = await db.from('app_config').select('*').eq('id', 1).single();
+  if (!currentCompanyCode) return;
+  const { data } = await db.from('app_config').select('*').eq('company_code', currentCompanyCode).single();
   if (data && data.positions) {
     CONFIG.positions = data.positions;
   }
@@ -819,24 +825,38 @@ function togglePwPeek(id, btn) {
 document.querySelectorAll('.pw-peek').forEach(setupPwPeek);
 
 async function login() {
+  const companyCode = document.getElementById('company-code').value.trim();
   const loginId = document.getElementById('login-id').value.trim();
   const pwInput = document.getElementById('password-input');
   const pw = pwInput._getPw ? pwInput._getPw() : pwInput.value;
 
-  if (!loginId || !pw) {
-    showToast('ログインIDとパスワードを入力してください', 'error');
+  if (!companyCode || !loginId || !pw) {
+    showToast('会社コード・ログインID・パスワードを入力してください', 'error');
     return;
   }
+
+  // 会社コード検証
+  const { data: company } = await db.from('companies').select('*').eq('company_code', companyCode).single();
+  if (!company) {
+    showToast('会社コードが見つかりません', 'error');
+    return;
+  }
+
+  currentCompanyCode = companyCode;
+  currentCompanyName = company.company_name;
 
   const { data, error } = await db
     .from('employees')
     .select('*')
+    .eq('company_code', companyCode)
     .eq('login_id', loginId)
     .eq('password', pw)
     .single();
 
   if (!data) {
     showToast('ログインIDまたはパスワードが違います', 'error');
+    currentCompanyCode = null;
+    currentCompanyName = '';
     return;
   }
 
@@ -845,6 +865,7 @@ async function login() {
 
   document.getElementById('user-name').textContent = data.name;
   document.getElementById('user-position').textContent = data.position;
+  document.getElementById('top-bar-company').textContent = currentCompanyName;
 
   // 宿泊日当の表示更新
   const accRate = getAccommodationAllowance();
@@ -860,7 +881,7 @@ async function login() {
 
   // 生体認証未登録ならバナー表示
   if (window.PublicKeyCredential && !localStorage.getItem('webauthn_cred')) {
-    showBiometricBanner(loginId, pw);
+    showBiometricBanner(companyCode, loginId, pw);
   }
 }
 
@@ -874,11 +895,14 @@ function logout() {
   }
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('company-code').value = '';
   document.getElementById('login-id').value = '';
   const pwEl = document.getElementById('password-input');
   if (pwEl._resetPw) pwEl._resetPw(); else pwEl.value = '';
   document.getElementById('biometric-banner').style.display = 'none';
   currentEmployee = null;
+  currentCompanyCode = null;
+  currentCompanyName = '';
   resetState();
   // 生体認証ボタン再表示
   if (window.PublicKeyCredential && localStorage.getItem('webauthn_cred')) {
@@ -887,6 +911,7 @@ function logout() {
 }
 
 // ===== 生体認証 (WebAuthn) =====
+let pendingBiometricCompanyCode = null;
 let pendingBiometricLoginId = null;
 let pendingBiometricPassword = null;
 
@@ -900,7 +925,8 @@ function base64ToBuf(b64) {
   return buf.buffer;
 }
 
-function showBiometricBanner(loginId, pw) {
+function showBiometricBanner(companyCode, loginId, pw) {
+  pendingBiometricCompanyCode = companyCode;
   pendingBiometricLoginId = loginId;
   pendingBiometricPassword = pw;
   document.getElementById('biometric-banner').style.display = 'block';
@@ -908,6 +934,7 @@ function showBiometricBanner(loginId, pw) {
 
 function dismissBiometricBanner() {
   document.getElementById('biometric-banner').style.display = 'none';
+  pendingBiometricCompanyCode = null;
   pendingBiometricLoginId = null;
   pendingBiometricPassword = null;
 }
@@ -937,6 +964,7 @@ async function doBiometricRegister() {
 
     localStorage.setItem('webauthn_cred', JSON.stringify({
       credId: bufToBase64(credential.rawId),
+      companyCode: pendingBiometricCompanyCode,
       loginId: pendingBiometricLoginId,
       password: pendingBiometricPassword
     }));
@@ -953,7 +981,7 @@ async function biometricLogin() {
   const stored = localStorage.getItem('webauthn_cred');
   if (!stored) return;
 
-  const { credId, loginId, password } = JSON.parse(stored);
+  const { credId, companyCode, loginId, password } = JSON.parse(stored);
 
   try {
     const challenge = crypto.getRandomValues(new Uint8Array(32));
@@ -971,9 +999,21 @@ async function biometricLogin() {
       }
     });
 
+    // 会社コード検証
+    const cc = companyCode || 'default';
+    const { data: company } = await db.from('companies').select('*').eq('company_code', cc).single();
+    if (!company) {
+      localStorage.removeItem('webauthn_cred');
+      showToast('会社情報が変更されました。再ログインしてください', 'error');
+      return;
+    }
+    currentCompanyCode = cc;
+    currentCompanyName = company.company_name;
+
     const { data } = await db
       .from('employees')
       .select('*')
+      .eq('company_code', cc)
       .eq('login_id', loginId)
       .eq('password', password)
       .single();
@@ -989,6 +1029,7 @@ async function biometricLogin() {
 
     document.getElementById('user-name').textContent = data.name;
     document.getElementById('user-position').textContent = data.position;
+    document.getElementById('top-bar-company').textContent = currentCompanyName;
     const accRate = getAccommodationAllowance();
     document.getElementById('acc-rate').textContent = '¥' + accRate.toLocaleString();
     document.getElementById('acc-date').value = todayStr();
@@ -1151,6 +1192,7 @@ async function submitRecord() {
 
   const record = {
     id: Date.now(),
+    company_code: currentCompanyCode,
     employee_id: currentEmployee.id,
     employee_name: currentEmployee.name,
     employee_position: currentEmployee.position,
@@ -1254,6 +1296,7 @@ async function submitAccommodation() {
 
   const records = dates.map((date, i) => ({
     id: Date.now() + i,
+    company_code: currentCompanyCode,
     employee_id: currentEmployee.id,
     employee_name: currentEmployee.name,
     employee_position: currentEmployee.position,
@@ -1338,6 +1381,7 @@ async function loadHistory() {
   const { data: records, error } = await db
     .from('trip_records')
     .select('*')
+    .eq('company_code', currentCompanyCode)
     .eq('employee_id', currentEmployee.id)
     .gte('date', startDate)
     .lt('date', nextMonth)

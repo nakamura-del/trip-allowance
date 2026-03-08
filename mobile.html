@@ -706,6 +706,12 @@
   </div>
 </div>
 
+<!-- オフラインバナー -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:white;padding:8px 16px;font-size:13px;font-weight:600;align-items:center;justify-content:center;gap:8px;">
+  <span>オフラインモード - オンラインに戻ると自動同期します</span>
+</div>
+<div id="offline-badge" style="display:none;position:fixed;top:60px;right:12px;z-index:100;background:#f59e0b;color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.2);"></div>
+
 <!-- トースト -->
 <div class="toast" id="toast"></div>
 
@@ -714,6 +720,126 @@
 const SUPABASE_URL = 'https://aeguoilgauxwincmulnc.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlZ3VvaWxnYXV4d2luY211bG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NjYwOTgsImV4cCI6MjA4ODQ0MjA5OH0.SQv2NS6tyenI_9IB9yHfkX_Dj3jeKiLmdBoG0PVZswY';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== オフライン対応 =====
+const OFFLINE_QUEUE_KEY = 'trip_offline_queue';
+const OFFLINE_STATE_KEY = 'trip_offline_state';
+let isOnline = navigator.onLine;
+
+function getOfflineQueue() {
+  try { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveOfflineQueue(queue) {
+  localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+  updateOfflineBadge();
+}
+
+function addToOfflineQueue(records) {
+  const queue = getOfflineQueue();
+  if (Array.isArray(records)) {
+    queue.push(...records);
+  } else {
+    queue.push(records);
+  }
+  saveOfflineQueue(queue);
+}
+
+function updateOfflineBadge() {
+  const badge = document.getElementById('offline-badge');
+  const count = getOfflineQueue().length;
+  if (badge) {
+    badge.style.display = count > 0 ? 'block' : 'none';
+    badge.textContent = '未同期: ' + count + '件';
+  }
+}
+
+function updateOnlineStatus() {
+  isOnline = navigator.onLine;
+  const banner = document.getElementById('offline-banner');
+  if (banner) {
+    banner.style.display = isOnline ? 'none' : 'flex';
+  }
+  if (isOnline) {
+    syncOfflineQueue();
+  }
+}
+
+async function syncOfflineQueue() {
+  const queue = getOfflineQueue();
+  if (queue.length === 0) return;
+
+  const banner = document.getElementById('offline-banner');
+  if (banner) {
+    banner.style.display = 'flex';
+    banner.querySelector('span').textContent = '同期中... (' + queue.length + '件)';
+    banner.style.background = '#2563eb';
+  }
+
+  const failed = [];
+  for (const record of queue) {
+    try {
+      const { error } = await db.from('trip_records').insert(record);
+      if (error) failed.push(record);
+    } catch {
+      failed.push(record);
+    }
+  }
+
+  saveOfflineQueue(failed);
+
+  if (banner) {
+    if (failed.length === 0) {
+      banner.querySelector('span').textContent = '同期完了！';
+      banner.style.background = '#059669';
+      setTimeout(() => { banner.style.display = 'none'; }, 2000);
+      showToast('オフラインデータを同期しました (' + queue.length + '件)', 'success');
+      loadHistory();
+    } else {
+      banner.querySelector('span').textContent = failed.length + '件の同期に失敗';
+      banner.style.background = '#dc2626';
+      setTimeout(() => updateOnlineStatus(), 3000);
+    }
+  }
+}
+
+// 移動中の状態をローカルに保存（アプリ終了対策）
+function saveTravelState() {
+  if (state.phase === 'idle') {
+    localStorage.removeItem(OFFLINE_STATE_KEY);
+    return;
+  }
+  localStorage.setItem(OFFLINE_STATE_KEY, JSON.stringify({
+    phase: state.phase,
+    departTime: state.departTime ? state.departTime.toISOString() : null,
+    arriveTime: state.arriveTime ? state.arriveTime.toISOString() : null,
+    departGPS: state.departGPS,
+    arriveGPS: state.arriveGPS,
+    distance: state.distance,
+    allowance: state.allowance,
+    tier: state.tier,
+  }));
+}
+
+function restoreTravelState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OFFLINE_STATE_KEY));
+    if (!saved || saved.phase === 'idle') return false;
+    state.phase = saved.phase;
+    state.departTime = saved.departTime ? new Date(saved.departTime) : null;
+    state.arriveTime = saved.arriveTime ? new Date(saved.arriveTime) : null;
+    state.departGPS = saved.departGPS;
+    state.arriveGPS = saved.arriveGPS;
+    state.distance = saved.distance;
+    state.allowance = saved.allowance;
+    state.tier = saved.tier;
+    return true;
+  } catch { return false; }
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
 
 // ===== 設定 =====
 let CONFIG = { positions: [] };
@@ -877,6 +1003,7 @@ async function login() {
   document.getElementById('main-screen').style.flexDirection = 'column';
   updateDate();
   loadHistory();
+  afterLogin();
   showToast(data.name + ' さん、こんにちは', 'success');
 
   // 生体認証未登録ならバナー表示
@@ -1039,6 +1166,7 @@ async function biometricLogin() {
     document.getElementById('main-screen').style.flexDirection = 'column';
     updateDate();
     loadHistory();
+    afterLogin();
     showToast(data.name + ' さん、こんにちは', 'success');
 
   } catch (e) {
@@ -1124,6 +1252,7 @@ async function depart() {
     trainEl.classList.add('active');
     trainEl.classList.remove('stopping');
     setTimeout(() => trainEl.classList.add('running'), 3000);
+    saveTravelState();
     showToast('出発を記録しました', 'success');
 
   } catch(e) {
@@ -1176,6 +1305,7 @@ async function arrive() {
     document.getElementById('input-section').style.display = 'block';
     document.getElementById('btn-submit').style.display = 'block';
     btn.style.display = 'none';
+    saveTravelState();
     showToast('到着を記録しました', 'success');
 
   } catch(e) {
@@ -1211,12 +1341,20 @@ async function submitRecord() {
     submitted_at: new Date().toISOString(),
   };
 
+  if (!navigator.onLine) {
+    addToOfflineQueue(record);
+    showToast('オフライン保存しました（オンライン時に自動同期）', 'success');
+    resetState();
+    return;
+  }
+
   const { error } = await db.from('trip_records').insert(record);
 
   if (error) {
-    btn.disabled = false;
-    btn.textContent = '✓ この移動を記録する';
-    showToast('保存に失敗しました', 'error');
+    // Supabase失敗時もオフラインキューに保存
+    addToOfflineQueue(record);
+    showToast('サーバー接続失敗 - ローカルに保存しました', 'success');
+    resetState();
     return;
   }
 
@@ -1311,13 +1449,33 @@ async function submitAccommodation() {
     submitted_at: now,
   }));
 
+  if (!navigator.onLine) {
+    addToOfflineQueue(records);
+    btn.disabled = false;
+    btn.textContent = '🏨 宿泊を記録する';
+    const msg = dates.length > 1 ? dates.length + '泊分をオフライン保存しました' : 'オフライン保存しました';
+    showToast(msg + '（オンライン時に自動同期）', 'success');
+    document.getElementById('acc-hotel').value = '';
+    document.getElementById('acc-note').value = '';
+    document.getElementById('acc-date').value = todayStr();
+    document.getElementById('acc-date-from').value = '';
+    document.getElementById('acc-date-to').value = '';
+    document.getElementById('acc-nights-info').textContent = '';
+    return;
+  }
+
   const { error } = await db.from('trip_records').insert(records);
 
   btn.disabled = false;
   btn.textContent = '🏨 宿泊を記録する';
 
   if (error) {
-    showToast('保存に失敗しました', 'error');
+    // Supabase失敗時もオフラインキューに保存
+    addToOfflineQueue(records);
+    showToast('サーバー接続失敗 - ローカルに保存しました', 'success');
+    document.getElementById('acc-hotel').value = '';
+    document.getElementById('acc-note').value = '';
+    document.getElementById('acc-date').value = todayStr();
     return;
   }
 
@@ -1343,6 +1501,7 @@ function cancelTrip() {
 // ===== 状態リセット =====
 function resetState() {
   state = { phase:'idle', departTime:null, arriveTime:null, departGPS:null, arriveGPS:null, distance:null, allowance:null, tier:null };
+  localStorage.removeItem(OFFLINE_STATE_KEY);
 
   document.getElementById('status-card').className = 'status-card idle';
   document.getElementById('status-text').textContent = '待機中';
@@ -1482,12 +1641,59 @@ function showToast(msg, type = '') {
   setTimeout(() => t.className = 'toast ' + type, 2500);
 }
 
+// ===== ログイン後処理 =====
+function afterLogin() {
+  updateOnlineStatus();
+  updateOfflineBadge();
+
+  // 移動中の状態を復元
+  if (restoreTravelState()) {
+    if (state.phase === 'traveling' && state.departGPS) {
+      document.getElementById('status-card').className = 'status-card traveling';
+      document.getElementById('status-text').textContent = '移動中';
+      document.getElementById('status-text').className = 'status-value status-moving';
+      document.getElementById('gps-info').innerHTML =
+        `出発: ${state.departTime.toLocaleTimeString('ja-JP')}<br>` +
+        `📍 ${state.departGPS.lat.toFixed(6)}, ${state.departGPS.lng.toFixed(6)}<br>` +
+        `精度: ±${Math.round(state.departGPS.accuracy)}m`;
+      document.getElementById('btn-depart').style.display = 'none';
+      document.getElementById('btn-cancel').style.display = 'block';
+      const btnArrive = document.getElementById('btn-arrive');
+      btnArrive.disabled = false;
+      btnArrive.className = 'action-btn btn-arrive';
+      showToast('移動中の状態を復元しました', 'success');
+    } else if (state.phase === 'done' && state.distance != null) {
+      document.getElementById('status-card').className = 'status-card done';
+      document.getElementById('status-text').textContent = '到着完了';
+      document.getElementById('status-text').className = 'status-value status-complete';
+      document.getElementById('gps-info').innerHTML =
+        `出発: ${state.departTime.toLocaleTimeString('ja-JP')} → 到着: ${state.arriveTime.toLocaleTimeString('ja-JP')}`;
+      document.getElementById('result-card').style.display = 'block';
+      document.getElementById('result-distance').textContent = state.distance + ' km';
+      document.getElementById('result-tier').textContent = state.tier.label;
+      document.getElementById('result-allowance').textContent =
+        state.tier.allowance === 0 ? '¥0（対象外）' : '¥' + state.tier.allowance.toLocaleString();
+      document.getElementById('input-section').style.display = 'block';
+      document.getElementById('btn-submit').style.display = 'block';
+      document.getElementById('btn-depart').style.display = 'none';
+      document.getElementById('btn-arrive').style.display = 'none';
+      showToast('到着済みの状態を復元しました', 'success');
+    }
+  }
+
+  // オンラインなら未同期キューを同期
+  if (navigator.onLine) {
+    syncOfflineQueue();
+  }
+}
+
 // 連泊日付変更イベント
 document.getElementById('acc-date-from').addEventListener('change', updateNightsInfo);
 document.getElementById('acc-date-to').addEventListener('change', updateNightsInfo);
 
 // 初期化
 updateDate();
+updateOnlineStatus();
 </script>
 </body>
 </html>

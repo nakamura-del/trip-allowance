@@ -458,6 +458,16 @@
     <button class="logout-btn" onclick="logout()">ログアウト</button>
   </div>
 
+  <!-- 生体認証登録バナー -->
+  <div id="biometric-banner" style="display:none;margin:12px 20px 0;padding:14px 16px;background:#fff;border:2px solid var(--accent);border-radius:14px;box-shadow:0 2px 12px rgba(192,57,43,0.1);">
+    <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;">🔐 次回から生体認証でログイン</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Face ID / Touch ID を登録すると、次回からパスワード入力なしでログインできます。</div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="doBiometricRegister()" style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">登録する</button>
+      <button onclick="dismissBiometricBanner()" style="padding:10px 16px;background:var(--surface2);color:var(--text2);border:none;border-radius:10px;font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;">後で</button>
+    </div>
+  </div>
+
   <div style="flex:1; overflow-y: auto;">
 
     <!-- 記録タブ -->
@@ -848,13 +858,9 @@ async function login() {
   loadHistory();
   showToast(data.name + ' さん、こんにちは', 'success');
 
-  // 生体認証未登録なら登録を提案
+  // 生体認証未登録ならバナー表示
   if (window.PublicKeyCredential && !localStorage.getItem('webauthn_cred')) {
-    setTimeout(() => {
-      if (confirm('次回から生体認証（Face ID / Touch ID）でログインしますか？')) {
-        registerBiometric(loginId, pw);
-      }
-    }, 1000);
+    showBiometricBanner(loginId, pw);
   }
 }
 
@@ -871,11 +877,19 @@ function logout() {
   document.getElementById('login-id').value = '';
   const pwEl = document.getElementById('password-input');
   if (pwEl._resetPw) pwEl._resetPw(); else pwEl.value = '';
+  document.getElementById('biometric-banner').style.display = 'none';
   currentEmployee = null;
   resetState();
+  // 生体認証ボタン再表示
+  if (window.PublicKeyCredential && localStorage.getItem('webauthn_cred')) {
+    document.getElementById('btn-biometric').style.display = 'flex';
+  }
 }
 
 // ===== 生体認証 (WebAuthn) =====
+let pendingBiometricLoginId = null;
+let pendingBiometricPassword = null;
+
 function bufToBase64(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf)));
 }
@@ -886,16 +900,29 @@ function base64ToBuf(b64) {
   return buf.buffer;
 }
 
-async function registerBiometric(loginId, password) {
+function showBiometricBanner(loginId, pw) {
+  pendingBiometricLoginId = loginId;
+  pendingBiometricPassword = pw;
+  document.getElementById('biometric-banner').style.display = 'block';
+}
+
+function dismissBiometricBanner() {
+  document.getElementById('biometric-banner').style.display = 'none';
+  pendingBiometricLoginId = null;
+  pendingBiometricPassword = null;
+}
+
+async function doBiometricRegister() {
+  if (!pendingBiometricLoginId) return;
   try {
-    const userId = new TextEncoder().encode(loginId);
+    const userId = new TextEncoder().encode(pendingBiometricLoginId);
     const challenge = crypto.getRandomValues(new Uint8Array(32));
 
     const credential = await navigator.credentials.create({
       publicKey: {
         challenge: challenge,
         rp: { name: '出張日当管理', id: location.hostname },
-        user: { id: userId, name: loginId, displayName: loginId },
+        user: { id: userId, name: pendingBiometricLoginId, displayName: pendingBiometricLoginId },
         pubKeyCredParams: [
           { type: 'public-key', alg: -7 },
           { type: 'public-key', alg: -257 }
@@ -910,13 +937,15 @@ async function registerBiometric(loginId, password) {
 
     localStorage.setItem('webauthn_cred', JSON.stringify({
       credId: bufToBase64(credential.rawId),
-      loginId: loginId,
-      password: password
+      loginId: pendingBiometricLoginId,
+      password: pendingBiometricPassword
     }));
 
+    dismissBiometricBanner();
     showToast('生体認証を登録しました', 'success');
   } catch (e) {
-    console.log('WebAuthn registration cancelled or failed:', e);
+    showToast('生体認証の登録に失敗しました', 'error');
+    console.error('WebAuthn register error:', e);
   }
 }
 
@@ -942,7 +971,6 @@ async function biometricLogin() {
       }
     });
 
-    // 認証成功 → DBからユーザー取得してログイン
     const { data } = await db
       .from('employees')
       .select('*')
@@ -973,15 +1001,20 @@ async function biometricLogin() {
     showToast(data.name + ' さん、こんにちは', 'success');
 
   } catch (e) {
-    console.log('WebAuthn auth cancelled:', e);
+    showToast('認証がキャンセルされました', 'error');
+    console.error('WebAuthn auth error:', e);
   }
 }
 
 // ページ読み込み時に生体認証ボタン表示判定
-(function checkBiometric() {
-  if (window.PublicKeyCredential && localStorage.getItem('webauthn_cred')) {
-    document.getElementById('btn-biometric').style.display = 'flex';
-  }
+(async function checkBiometric() {
+  if (!window.PublicKeyCredential) return;
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (available && localStorage.getItem('webauthn_cred')) {
+      document.getElementById('btn-biometric').style.display = 'flex';
+    }
+  } catch (e) {}
 })();
 
 // ===== セグメント切替 =====

@@ -929,7 +929,7 @@ function renderSetupGuide() {
             <div style="font-size:12px;color:var(--text2);line-height:1.6;">
               従業員はスマートフォンで以下URLにアクセスし、<br>
               会社コード「<strong>${currentCompanyCode}</strong>」と登録したログインID・パスワードでログインします。<br>
-              ${step3Ready ? '<code style="background:var(--surface2);padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;margin-top:4px;">' + location.origin + '/mobile.html</code>' : ''}
+              <a href="${location.origin}/mobile.html" target="_blank" style="background:var(--surface2);padding:4px 8px;border-radius:6px;font-size:12px;display:inline-block;margin-top:4px;color:var(--primary);text-decoration:none;">${location.origin}/mobile.html</a>
             </div>
           </div>
         </div>

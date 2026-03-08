@@ -256,21 +256,28 @@ async function loadCompanies() {
   });
 
   const tbody = document.getElementById('company-table');
-  tbody.innerHTML = (companies || []).map(c => {
+  tbody.innerHTML = '';
+  (companies || []).forEach(c => {
     const admins = adminByCompany[c.company_code] || [];
     const adminNames = admins.map(a => a.name).join(', ') || '-';
-    return `<tr>
-      <td class="mono" style="font-weight:600;">${c.company_code}</td>
-      <td>${c.company_name}</td>
-      <td>${adminNames}</td>
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="mono" style="font-weight:600;"></td>
+      <td></td>
+      <td></td>
       <td>${empByCompany[c.company_code] || 0}人</td>
       <td>${recByCompany[c.company_code] || 0}件</td>
       <td style="display:flex;gap:6px;">
-        <button class="btn-sm btn-accent" onclick="showDetail('${c.company_code}')">詳細</button>
-        <button class="btn-sm btn-danger" onclick="deleteCompany('${c.company_code}', '${c.company_name}')">削除</button>
-      </td>
-    </tr>`;
-  }).join('');
+        <button class="btn-sm btn-accent">詳細</button>
+        <button class="btn-sm btn-danger">削除</button>
+      </td>`;
+    tr.children[0].textContent = c.company_code;
+    tr.children[1].textContent = c.company_name;
+    tr.children[2].textContent = adminNames;
+    tr.querySelector('.btn-accent').addEventListener('click', () => showDetail(c.company_code));
+    tr.querySelector('.btn-danger').addEventListener('click', () => deleteCompany(c.company_code, c.company_name));
+    tbody.appendChild(tr);
+  });
 }
 
 async function createCompany() {

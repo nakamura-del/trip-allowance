@@ -484,7 +484,7 @@
                 <th>距離/ホテル</th>
                 <th>区分</th>
                 <th>移動日当</th>
-                <th>宿泊日当</th>
+                <th>出張手当</th>
                 <th>目的</th>
                 <th>操作</th>
               </tr>
@@ -989,11 +989,11 @@ async function renderDashboard() {
       <div class="summary-value green">¥${totalTravelAllow.toLocaleString()}</div>
     </div>
     <div class="summary-card">
-      <div class="summary-label">宿泊回数</div>
-      <div class="summary-value purple">${accRecs.length}<span style="font-size:14px;color:var(--text2);margin-left:4px;">泊</span></div>
+      <div class="summary-label">出張日数</div>
+      <div class="summary-value purple">${accRecs.length}<span style="font-size:14px;color:var(--text2);margin-left:4px;">日</span></div>
     </div>
     <div class="summary-card">
-      <div class="summary-label">宿泊日当合計</div>
+      <div class="summary-label">出張手当合計</div>
       <div class="summary-value purple">¥${totalAccAllow.toLocaleString()}</div>
     </div>
     <div class="summary-card">
@@ -1023,7 +1023,7 @@ async function renderDashboard() {
   } else {
     document.getElementById('person-summary-wrap').innerHTML = `
       <table>
-        <thead><tr><th>従業員</th><th>役職</th><th>移動</th><th>距離</th><th>移動日当</th><th>宿泊</th><th>宿泊日当</th><th>合計</th></tr></thead>
+        <thead><tr><th>従業員</th><th>役職</th><th>移動</th><th>距離</th><th>移動日当</th><th>出張日数</th><th>出張手当</th><th>合計</th></tr></thead>
         <tbody>
           ${empNames.map(name => {
             const d = empMap[name];
@@ -1034,7 +1034,7 @@ async function renderDashboard() {
               <td class="mono">${d.trips}回</td>
               <td class="mono">${Math.round(d.totalDist*10)/10} km</td>
               <td class="allowance-pos">¥${d.travelAllow.toLocaleString()}</td>
-              <td class="mono">${d.stays}泊</td>
+              <td class="mono">${d.stays}日</td>
               <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">¥${d.accAllow.toLocaleString()}</td>
               <td class="allowance-pos" style="font-size:16px;">¥${total.toLocaleString()}</td>
             </tr>`;
@@ -1055,7 +1055,7 @@ async function renderDashboard() {
   } else {
     document.getElementById('recent-table-wrap').innerHTML = `
       <table>
-        <thead><tr><th>日付</th><th>従業員</th><th>種別</th><th>距離/ホテル</th><th>移動日当</th><th>宿泊日当</th><th>目的</th></tr></thead>
+        <thead><tr><th>日付</th><th>従業員</th><th>種別</th><th>距離/ホテル</th><th>移動日当</th><th>出張手当</th><th>目的</th></tr></thead>
         <tbody>
           ${recent.map(r => {
             const isTravel = r.record_type === 'travel';
@@ -1264,7 +1264,7 @@ async function exportCSV() {
 
   if (records.length === 0) { showToast('データがありません', 'error'); return; }
 
-  const headers = ['日付', '従業員名', '役職', '種別', '出発時刻', '到着時刻', '距離(km)', '区分', '移動日当(円)', '宿泊日当(円)', 'ホテル名', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
+  const headers = ['日付', '従業員名', '役職', '種別', '出発時刻', '到着時刻', '距離(km)', '区分', '移動日当(円)', '出張手当(円)', 'ホテル名', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
 
   const rows = records.map(r => [
     r.date,
@@ -1355,13 +1355,13 @@ async function renderMonthly() {
           <div style="display:flex;gap:16px;font-size:13px;flex-wrap:wrap;">
             <span>移動 <strong class="mono">${travelRecs.length}回</strong> / <strong class="mono">${totalDist}km</strong></span>
             <span>移動日当 <strong class="mono" style="color:var(--success)">¥${totalTravelAllow.toLocaleString()}</strong></span>
-            <span>宿泊 <strong class="mono">${accRecs.length}泊</strong></span>
-            <span>宿泊日当 <strong class="mono" style="color:var(--accent2)">¥${totalAccAllow.toLocaleString()}</strong></span>
+            <span>出張 <strong class="mono">${accRecs.length}日</strong></span>
+            <span>出張手当 <strong class="mono" style="color:var(--accent2)">¥${totalAccAllow.toLocaleString()}</strong></span>
             <span>合計 <strong class="mono" style="color:var(--success);font-size:16px;">¥${grandTotal.toLocaleString()}</strong></span>
           </div>
         </div>
         <table>
-          <thead><tr><th>従業員</th><th>役職</th><th>移動回数</th><th>距離</th><th>移動日当</th><th>宿泊数</th><th>宿泊日当</th><th>合計</th></tr></thead>
+          <thead><tr><th>従業員</th><th>役職</th><th>移動回数</th><th>距離</th><th>移動日当</th><th>出張日数</th><th>出張手当</th><th>合計</th></tr></thead>
           <tbody>
             ${Object.entries(empMap).map(([name, d]) => `
               <tr>
@@ -1370,7 +1370,7 @@ async function renderMonthly() {
                 <td class="mono">${d.trips}回</td>
                 <td class="mono">${Math.round(d.dist*10)/10} km</td>
                 <td class="allowance-pos">¥${d.travelAllow.toLocaleString()}</td>
-                <td class="mono">${d.stays}泊</td>
+                <td class="mono">${d.stays}日</td>
                 <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">¥${d.accAllow.toLocaleString()}</td>
                 <td class="allowance-pos" style="font-size:15px;">¥${(d.travelAllow + d.accAllow).toLocaleString()}</td>
               </tr>

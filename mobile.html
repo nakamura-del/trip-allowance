@@ -626,7 +626,7 @@
         <div class="segment-view" id="view-accommodation">
 
           <div class="acc-rate-display">
-            <div class="acc-rate-label">あなたの宿泊日当</div>
+            <div class="acc-rate-label">あなたの出張手当（1日あたり）</div>
             <div class="acc-rate-value" id="acc-rate">¥0</div>
           </div>
 
@@ -993,7 +993,7 @@ async function login() {
   document.getElementById('user-position').textContent = data.position;
   document.getElementById('top-bar-company').textContent = currentCompanyName;
 
-  // 宿泊日当の表示更新
+  // 出張手当の表示更新
   const accRate = getAccommodationAllowance();
   document.getElementById('acc-rate').textContent = '¥' + accRate.toLocaleString();
   document.getElementById('acc-date').value = todayStr();
@@ -1383,8 +1383,9 @@ function updateNightsInfo() {
   if (from && to) {
     const nights = Math.round((new Date(to) - new Date(from)) / 86400000);
     if (nights > 0) {
+      const days = nights + 1;
       const allowance = getAccommodationAllowance();
-      info.textContent = nights + '泊 → ¥' + (allowance * nights).toLocaleString();
+      info.textContent = nights + '泊' + days + '日 → ' + days + '日分 ¥' + (allowance * days).toLocaleString();
     } else {
       info.textContent = 'チェックアウト日はチェックイン日より後にしてください';
       info.style.color = 'var(--danger)';
@@ -1406,19 +1407,25 @@ async function submitAccommodation() {
     return;
   }
 
-  // 宿泊日リストを作成
+  // 出張日リストを作成（1泊2日=2日分、2泊3日=3日分）
   let dates = [];
   if (accType === 'single') {
     const date = document.getElementById('acc-date').value;
     if (!date) { showToast('宿泊日を選択してください', 'error'); return; }
+    // 1泊2日 = 当日 + 翌日
     dates = [date];
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    dates.push(nextDay.toISOString().split('T')[0]);
   } else {
     const from = document.getElementById('acc-date-from').value;
     const to = document.getElementById('acc-date-to').value;
     if (!from || !to) { showToast('チェックイン日とチェックアウト日を選択してください', 'error'); return; }
     const nights = Math.round((new Date(to) - new Date(from)) / 86400000);
     if (nights <= 0) { showToast('チェックアウト日はチェックイン日より後にしてください', 'error'); return; }
-    for (let i = 0; i < nights; i++) {
+    // N泊(N+1)日 = チェックイン日からチェックアウト日まで
+    const days = nights + 1;
+    for (let i = 0; i < days; i++) {
       const d = new Date(from);
       d.setDate(d.getDate() + i);
       dates.push(d.toISOString().split('T')[0]);
@@ -1453,7 +1460,7 @@ async function submitAccommodation() {
     addToOfflineQueue(records);
     btn.disabled = false;
     btn.textContent = '🏨 宿泊を記録する';
-    const msg = dates.length > 1 ? dates.length + '泊分をオフライン保存しました' : 'オフライン保存しました';
+    const msg = dates.length + '日分をオフライン保存しました';
     showToast(msg + '（オンライン時に自動同期）', 'success');
     document.getElementById('acc-hotel').value = '';
     document.getElementById('acc-note').value = '';
@@ -1479,7 +1486,7 @@ async function submitAccommodation() {
     return;
   }
 
-  const msg = dates.length > 1 ? dates.length + '泊分の宿泊記録を保存しました' : '宿泊記録を保存しました';
+  const msg = dates.length + '日分の出張手当を保存しました';
   showToast(msg, 'success');
   document.getElementById('acc-hotel').value = '';
   document.getElementById('acc-note').value = '';
@@ -1572,11 +1579,11 @@ async function loadHistory() {
           <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--success)">¥${totalTravelAllow.toLocaleString()}</div>
         </div>
         <div>
-          <div style="font-size:10px;color:var(--text2)">宿泊回数</div>
-          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent2)">${accRecords.length} 泊</div>
+          <div style="font-size:10px;color:var(--text2)">出張日数</div>
+          <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--accent2)">${accRecords.length} 日</div>
         </div>
         <div>
-          <div style="font-size:10px;color:var(--text2)">宿泊日当</div>
+          <div style="font-size:10px;color:var(--text2)">出張手当</div>
           <div style="font-family:'DM Mono',monospace;font-size:16px;color:var(--success)">¥${totalAccAllow.toLocaleString()}</div>
         </div>
       </div>

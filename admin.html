@@ -663,7 +663,7 @@
     <div id="pdf-extract-content"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closePdfExtractModal()">キャンセル</button>
-      <button class="btn-save" onclick="applyPdfPositions()" style="background:var(--success);">アプリに反映する</button>
+      <button class="btn-save" id="btn-apply-pdf" onclick="applyPdfPositions()" style="background:var(--success);">アプリに反映する</button>
     </div>
   </div>
 </div>
@@ -1757,8 +1757,8 @@ async function uploadPdf(file) {
   showToast('旅費規定PDFをアップロードしました', 'success');
   loadPdfInfo();
 
-  // Show extraction confirmation if data was found
-  if (pdfData && (pdfData.positions.length > 0 || pdfData.travelTiers.length > 0)) {
+  // Show extraction confirmation or error
+  if (pdfData) {
     showPdfExtractModal(pdfData);
   }
 }
@@ -1890,10 +1890,15 @@ function showPdfExtractModal(data) {
   }
 
   if (data.positions.length === 0 && data.travelTiers.length === 0) {
-    html = '<div style="text-align:center;padding:24px;color:var(--text2)">旅費規定の情報を抽出できませんでした。<br>PDFの形式が想定と異なる可能性があります。</div>';
+    html = '<div style="text-align:center;padding:24px;color:var(--danger);">⚠️ 旅費規定から必要な情報を抽出できませんでした。<br><br><div style="text-align:left;font-size:12px;color:var(--text2);line-height:1.8;">PDFに以下の情報が含まれているか確認してください：<br>・役職別の日当（第13条）<br>・移動距離別の移動日当（第15条）<br><br>※ 代表取締役のみの規定でも反映できます。</div></div>';
   }
 
   document.getElementById('pdf-extract-content').innerHTML = html;
+  const btnApply = document.getElementById('btn-apply-pdf');
+  const hasData = data.positions.length > 0 || data.travelTiers.length > 0;
+  btnApply.disabled = !hasData;
+  btnApply.style.opacity = hasData ? '1' : '0.4';
+  btnApply.style.cursor = hasData ? 'pointer' : 'not-allowed';
   document.getElementById('pdf-extract-modal').classList.add('show');
 }
 

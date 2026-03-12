@@ -486,6 +486,7 @@
                 <th>移動日当</th>
                 <th>出張手当</th>
                 <th>目的</th>
+                <th>面談相手</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -529,6 +530,11 @@
         <div id="no-pdf-warning" style="display:none;background:#fffbeb;border:1px solid #f59e0b;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#92400e;">
           ⚠️ 旅費規定PDFが登録されていません。PDFをアップロードすると、役職・日当の設定が自動的に反映されます。<br>
           <strong>税務上、旅費規定の原本とアプリの設定が一致している必要があります。</strong>
+          <div style="margin-top:10px;">
+            <a href="出張旅費規程_雛形.docx" download style="display:inline-flex;align-items:center;gap:4px;background:#92400e;color:white;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;">📥 旅費規程テンプレートをダウンロード</a>
+            <span style="font-size:11px;display:block;margin-top:4px;">旅費規程がない場合はこちらを編集してPDF化してください</span>
+            <span style="font-size:11px;display:block;margin-top:2px;">※ 本テンプレートは雛形です。顧問の社労士・税理士等の専門家にご相談のうえ、貴社の実情に合わせて修正してからご利用ください。</span>
+          </div>
         </div>
         <div id="pdf-upload-area" style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;" onclick="document.getElementById('pdf-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='#eff6ff'" ondragleave="this.style.borderColor='var(--border)';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='var(--border)';this.style.background='';handlePdfDrop(event)">
           <div style="font-size:32px;margin-bottom:8px;">📄</div>
@@ -922,7 +928,14 @@ function renderSetupGuide() {
               「旅費規定・設定」画面で旅費規定PDFをアップロードします。<br>
               PDFから役職・日当・宿泊費が自動的に読み取られ、アプリに反映されます。
             </div>
-            ${!step1Done ? '<button class="btn-sm btn-accent" style="margin-top:8px;" onclick="document.querySelector(\'[onclick*=settings]\').click()">設定画面へ</button>' : ''}
+            ${!step1Done ? `<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+              <button class="btn-sm btn-accent" onclick="document.querySelector('[onclick*=settings]').click()">設定画面へ</button>
+              <a href="出張旅費規程_雛形.docx" download class="btn-sm btn-outline" style="display:inline-flex;align-items:center;gap:4px;text-decoration:none;">📥 旅費規程テンプレート(.docx)</a>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;">
+              ※ 旅費規程がない場合はテンプレートをダウンロードし、金額・距離等を編集してPDF化のうえアップロードしてください。<br>
+              ※ 本テンプレートはあくまで雛形です。実際の運用にあたっては、顧問の社労士・税理士等の専門家にご相談のうえ、貴社の実情に合わせた内容に修正してからご利用ください。
+            </div>` : ''}
           </div>
         </div>
 
@@ -1131,6 +1144,7 @@ async function renderRecords() {
           ${r.purpose || '<span style="color:var(--text3)">—</span>'}
           ${hasEdit ? '<span class="edit-badge">編集済</span>' : ''}
         </td>
+        <td style="color:var(--text2)">${r.person || '<span style="color:var(--text3)">—</span>'}</td>
         <td>
           ${currentAdmin && currentAdmin.is_admin ? `<button class="btn-sm btn-outline" onclick="openEdit(${r.id}, '${r.record_type}')">編集</button>
           <button class="btn-sm btn-outline" id="del-btn-${r.id}" onclick="confirmDeleteRecord(${r.id})" style="color:var(--danger);border-color:var(--danger);">削除</button>` : ''}
@@ -1264,28 +1278,37 @@ async function exportCSV() {
 
   if (records.length === 0) { showToast('データがありません', 'error'); return; }
 
-  const headers = ['日付', '従業員名', '役職', '種別', '出発時刻', '到着時刻', '距離(km)', '区分', '移動日当(円)', '出張手当(円)', 'ホテル名', '目的', '面談相手', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
+  showToast('住所情報を取得中...', '');
 
-  const rows = records.map(r => [
-    r.date,
-    r.employee_name || '',
-    r.employee_position || '',
-    r.record_type === 'travel' ? '移動' : '宿泊',
-    r.depart_time ? new Date(r.depart_time).toLocaleTimeString('ja-JP') : '',
-    r.arrive_time ? new Date(r.arrive_time).toLocaleTimeString('ja-JP') : '',
-    r.distance,
-    r.tier || '',
-    r.record_type === 'travel' ? r.allowance : 0,
-    r.record_type === 'accommodation' ? r.allowance : 0,
-    r.hotel_name || '',
-    r.purpose || '',
-    r.person || '',
-    r.depart_gps?.lat || '',
-    r.depart_gps?.lng || '',
-    r.arrive_gps?.lat || '',
-    r.arrive_gps?.lng || '',
-    r.submitted_at ? new Date(r.submitted_at).toLocaleString('ja-JP') : '',
-  ]);
+  const headers = ['日付', '従業員名', '役職', '種別', '出発時刻', '到着時刻', '距離(km)', '区分', '移動日当(円)', '出張手当(円)', 'ホテル名', '目的', '面談相手', '出発地住所', '到着地住所', '出発GPS緯度', '出発GPS経度', '到着GPS緯度', '到着GPS経度', '記録日時'];
+
+  const rows = [];
+  for (const r of records) {
+    const departAddr = r.depart_gps ? await reverseGeocode(r.depart_gps.lat, r.depart_gps.lng) : '';
+    const arriveAddr = r.arrive_gps ? await reverseGeocode(r.arrive_gps.lat, r.arrive_gps.lng) : '';
+    rows.push([
+      r.date,
+      r.employee_name || '',
+      r.employee_position || '',
+      r.record_type === 'travel' ? '移動' : '宿泊',
+      r.depart_time ? new Date(r.depart_time).toLocaleTimeString('ja-JP') : '',
+      r.arrive_time ? new Date(r.arrive_time).toLocaleTimeString('ja-JP') : '',
+      r.distance,
+      r.tier || '',
+      r.record_type === 'travel' ? r.allowance : 0,
+      r.record_type === 'accommodation' ? r.allowance : 0,
+      r.hotel_name || '',
+      r.purpose || '',
+      r.person || '',
+      departAddr,
+      arriveAddr,
+      r.depart_gps?.lat || '',
+      r.depart_gps?.lng || '',
+      r.arrive_gps?.lat || '',
+      r.arrive_gps?.lng || '',
+      r.submitted_at ? new Date(r.submitted_at).toLocaleString('ja-JP') : '',
+    ]);
+  }
 
   const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -2021,6 +2044,25 @@ function renderAdminUsers() {
 }
 
 // ===== トースト =====
+// ===== 逆ジオコーディング =====
+const geocodeCache = {};
+
+async function reverseGeocode(lat, lng) {
+  if (!lat || !lng) return '';
+  const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+  if (geocodeCache[key]) return geocodeCache[key];
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1&accept-language=ja`);
+    const data = await res.json();
+    const addr = data.display_name || '';
+    const short = addr.replace(/日本、\s*/g, '').replace(/、/g, '');
+    geocodeCache[key] = short;
+    return short;
+  } catch(e) {
+    return '';
+  }
+}
+
 function showToast(msg, type = '') {
   const t = document.getElementById('admin-toast');
   t.textContent = msg;

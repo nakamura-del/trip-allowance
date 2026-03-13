@@ -405,18 +405,6 @@
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   .gps-loading { animation: pulse 1.2s infinite; color: var(--accent); }
 
-  /* トースト */
-  .toast {
-    position: fixed; bottom: 32px; left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 24px; font-size: 14px;
-    z-index: 999; transition: transform 0.3s; white-space: nowrap;
-  }
-
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.success { border-color: var(--success); color: var(--success); }
-  .toast.error { border-color: var(--danger); color: var(--danger); }
 
   /* タブ */
   .tab-bar {

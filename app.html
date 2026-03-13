@@ -1649,8 +1649,8 @@ async function login() {
   afterLogin();
   showToast(data.name + ' さん、こんにちは', 'success');
 
-  // 生体認証未登録ならバナー表示
-  if (window.PublicKeyCredential && !localStorage.getItem('webauthn_cred')) {
+  // 生体認証未登録ならバナー表示（アプリ内ブラウザでは非表示）
+  if (window.PublicKeyCredential && !localStorage.getItem('webauthn_cred') && !isInAppBrowser()) {
     showBiometricBanner(companyCode, loginId, pw);
   }
 }
@@ -1711,9 +1711,21 @@ function dismissBiometricBanner() {
   pendingBiometricPassword = null;
 }
 
+function isInAppBrowser() {
+  const ua = navigator.userAgent || '';
+  return /Line|FBAN|FBAV|Instagram|Twitter|MicroMessenger|WeChat/i.test(ua) ||
+    (ua.includes('Safari') === false && /iPhone|iPad|iPod/.test(ua));
+}
+
 async function doBiometricRegister() {
   if (!pendingBiometricLoginId) {
     showToast('認証情報が見つかりません。再ログインしてください', 'error');
+    return;
+  }
+
+  // アプリ内ブラウザ検出
+  if (isInAppBrowser()) {
+    showToast('アプリ内ブラウザでは生体認証を登録できません。Safari またはChromeで開いてください', 'error');
     return;
   }
 

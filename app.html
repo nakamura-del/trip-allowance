@@ -1855,15 +1855,11 @@ async function biometricLogin() {
   }
 }
 
-// 生体認証ボタン表示判定
+// 生体認証ボタン表示判定（credentialが保存されていれば表示）
 async function checkBiometric() {
-  if (!window.PublicKeyCredential) return;
-  try {
-    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-    if (available && localStorage.getItem('webauthn_cred')) {
-      document.getElementById('btn-biometric').style.display = 'flex';
-    }
-  } catch (e) {}
+  if (localStorage.getItem('webauthn_cred')) {
+    document.getElementById('btn-biometric').style.display = 'flex';
+  }
 }
 
 // ===== セグメント切替 =====
@@ -3676,9 +3672,7 @@ async function reverseGeocode(lat, lng) {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
   if (geocodeCache[key]) return geocodeCache[key];
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=ja`, {
-      headers: { 'User-Agent': 'TripAllowanceApp/1.0' }
-    });
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=ja`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     // addressdetails から住所を組み立て

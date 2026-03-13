@@ -2701,7 +2701,7 @@ async function renderDashboard() {
   } else {
     document.getElementById('recent-table-wrap').innerHTML = `
       <table>
-        <thead><tr><th>日付</th><th>従業員</th><th>種別</th><th>距離/ホテル</th><th>移動日当</th><th>出張手当</th><th>目的</th></tr></thead>
+        <thead><tr><th>日付</th><th>従業員</th><th>種別</th><th>距離/ホテル</th><th>移動日当</th><th>出張手当</th><th>目的</th><th>面談相手</th></tr></thead>
         <tbody>
           ${recent.map(r => {
             const isTravel = r.record_type === 'travel';
@@ -2715,6 +2715,7 @@ async function renderDashboard() {
               <td class="${tAllow > 0 ? 'allowance-pos' : 'allowance-zero'}">${tAllow > 0 ? '¥'+tAllow.toLocaleString() : '—'}</td>
               <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">${aAllow > 0 ? '¥'+aAllow.toLocaleString() : '—'}</td>
               <td style="color:var(--text2)">${r.purpose || '—'}</td>
+              <td style="color:var(--text2)">${r.person || '—'}</td>
             </tr>`;
           }).join('')}
         </tbody>

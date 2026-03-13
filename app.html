@@ -897,6 +897,10 @@
             </div>
           </div>
 
+          <button id="btn-cancel-arrive" style="display:none;width:100%;border:none;border-radius:12px;padding:14px;font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text2);margin-bottom:12px;transition:all 0.2s;" onclick="cancelArrive()">
+            到着を取り消す
+          </button>
+
           <button class="btn-submit" id="btn-submit" onclick="submitRecord()">
             ✓ この移動を記録する
           </button>
@@ -2004,6 +2008,7 @@ async function arrive() {
 
     document.getElementById('input-section').style.display = 'block';
     document.getElementById('btn-submit').style.display = 'block';
+    document.getElementById('btn-cancel-arrive').style.display = 'block';
     btn.style.display = 'none';
     saveTravelState();
     showToast('到着を記録しました', 'success');
@@ -2231,6 +2236,41 @@ function cancelTrip() {
   showToast('出発を取り消しました', 'success');
 }
 
+// ===== 到着取り消し =====
+function cancelArrive() {
+  if (state.phase !== 'done') return;
+  // 到着データをクリアし、移動中に戻す
+  state.phase = 'traveling';
+  state.arriveTime = null;
+  state.arriveGPS = null;
+  state.arriveAddress = '';
+  state.distance = null;
+  state.tier = null;
+  state.allowance = null;
+
+  document.getElementById('status-card').className = 'status-card traveling';
+  document.getElementById('status-text').textContent = '移動中';
+  document.getElementById('status-text').className = 'status-value status-moving';
+  const departAddr = state.departAddress || '';
+  document.getElementById('gps-info').innerHTML =
+    `出発: ${state.departTime.toLocaleTimeString('ja-JP')}<br>` +
+    (departAddr ? `📍 ${departAddr}` : `📍 ${state.departGPS.lat.toFixed(6)}, ${state.departGPS.lng.toFixed(6)}`);
+
+  document.getElementById('btn-arrive').style.display = 'flex';
+  document.getElementById('btn-arrive').disabled = false;
+  document.getElementById('btn-arrive').className = 'action-btn btn-arrive';
+  document.getElementById('btn-cancel').style.display = 'block';
+  document.getElementById('btn-cancel-arrive').style.display = 'none';
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('input-section').style.display = 'none';
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('input-purpose').value = '';
+  document.getElementById('input-person').value = '';
+
+  saveTravelState();
+  showToast('到着を取り消しました', 'success');
+}
+
 // ===== 状態リセット =====
 function resetState() {
   state = { phase:'idle', departTime:null, arriveTime:null, departGPS:null, arriveGPS:null, distance:null, allowance:null, tier:null };
@@ -2255,6 +2295,7 @@ function resetState() {
   document.getElementById('btn-submit').style.display = 'none';
   document.getElementById('btn-submit').disabled = false;
   document.getElementById('btn-submit').textContent = '✓ この移動を記録する';
+  document.getElementById('btn-cancel-arrive').style.display = 'none';
   document.getElementById('input-purpose').value = '';
   document.getElementById('input-person').value = '';
 }

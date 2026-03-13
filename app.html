@@ -1712,7 +1712,30 @@ function dismissBiometricBanner() {
 }
 
 async function doBiometricRegister() {
-  if (!pendingBiometricLoginId) return;
+  if (!pendingBiometricLoginId) {
+    showToast('認証情報が見つかりません。再ログインしてください', 'error');
+    return;
+  }
+
+  // WebAuthn対応チェック
+  if (!window.PublicKeyCredential) {
+    showToast('この端末は生体認証に対応していません', 'error');
+    dismissBiometricBanner();
+    return;
+  }
+
+  try {
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if (!available) {
+      showToast('この端末では生体認証を利用できません', 'error');
+      dismissBiometricBanner();
+      return;
+    }
+  } catch (e) {
+    showToast('生体認証の確認に失敗しました', 'error');
+    return;
+  }
+
   try {
     const userId = new TextEncoder().encode(pendingBiometricLoginId);
     const challenge = crypto.getRandomValues(new Uint8Array(32));
@@ -1744,7 +1767,7 @@ async function doBiometricRegister() {
     dismissBiometricBanner();
     showToast('生体認証を登録しました', 'success');
   } catch (e) {
-    showToast('生体認証の登録に失敗しました', 'error');
+    showToast('生体認証の登録に失敗: ' + (e.name || '') + ' ' + (e.message || ''), 'error');
     console.error('WebAuthn register error:', e);
   }
 }

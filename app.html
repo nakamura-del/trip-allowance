@@ -1923,6 +1923,17 @@ async function depart() {
       `📍 ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}<br>` +
       `精度: ±${Math.round(gps.accuracy)}m`;
 
+    // 住所を非同期で取得して表示
+    reverseGeocode(gps.lat, gps.lng).then(addr => {
+      if (addr) {
+        state.departAddress = addr;
+        document.getElementById('gps-info').innerHTML =
+          `出発: ${state.departTime.toLocaleTimeString('ja-JP')}<br>` +
+          `📍 ${addr}<br>` +
+          `精度: ±${Math.round(gps.accuracy)}m`;
+      }
+    });
+
     const btnArrive = document.getElementById('btn-arrive');
     btnArrive.disabled = false;
     btnArrive.className = 'action-btn btn-arrive';
@@ -1975,6 +1986,19 @@ async function arrive() {
       `出発: ${state.departTime.toLocaleTimeString('ja-JP')} → 到着: ${state.arriveTime.toLocaleTimeString('ja-JP')}<br>` +
       `📍 ${gps.lat.toFixed(6)}, ${gps.lng.toFixed(6)}<br>` +
       `精度: ±${Math.round(gps.accuracy)}m`;
+
+    // 住所を非同期で取得して表示
+    reverseGeocode(gps.lat, gps.lng).then(addr => {
+      if (addr) {
+        state.arriveAddress = addr;
+        const departAddr = state.departAddress || '';
+        document.getElementById('gps-info').innerHTML =
+          `出発: ${state.departTime.toLocaleTimeString('ja-JP')} → 到着: ${state.arriveTime.toLocaleTimeString('ja-JP')}<br>` +
+          (departAddr ? `📍 出発: ${departAddr}<br>` : '') +
+          `📍 到着: ${addr}<br>` +
+          `精度: ±${Math.round(gps.accuracy)}m`;
+      }
+    });
 
     document.getElementById('result-card').style.display = 'block';
     document.getElementById('result-distance').textContent = state.distance + ' km';

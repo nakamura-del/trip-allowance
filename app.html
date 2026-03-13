@@ -2710,7 +2710,7 @@ async function renderDashboard() {
             return `<tr>
               <td class="mono">${r.date}</td>
               <td>${r.employee_name || '—'}</td>
-              <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '宿泊'}</span></td>
+              <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '出張'}</span></td>
               <td class="mono">${isTravel ? r.distance + ' km' : (r.hotel_name || '—')}</td>
               <td class="${tAllow > 0 ? 'allowance-pos' : 'allowance-zero'}">${tAllow > 0 ? '¥'+tAllow.toLocaleString() : '—'}</td>
               <td style="color:var(--accent2);font-weight:600;font-family:'DM Mono',monospace">${aAllow > 0 ? '¥'+aAllow.toLocaleString() : '—'}</td>
@@ -2769,7 +2769,7 @@ async function renderRecords() {
       <tr>
         <td class="mono">${dateStr}</td>
         <td>${r.employee_name || '—'}<br><span style="font-size:11px;color:var(--text3)">${r.employee_position || ''}</span></td>
-        <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '宿泊'}</span></td>
+        <td><span class="badge ${isTravel ? 'badge-blue' : 'badge-purple'}">${isTravel ? '移動' : '出張'}</span></td>
         <td class="mono">${isTravel ? r.distance + ' km' : (r.hotel_name || '—')}</td>
         <td>${isTravel ? '<span class="badge badge-blue">' + (r.tier || '') + '</span>' : ''}</td>
         <td class="${isTravel && r.allowance > 0 ? 'allowance-pos' : 'allowance-zero'}">${isTravel ? (r.allowance > 0 ? '¥'+r.allowance.toLocaleString() : '対象外') : '—'}</td>
@@ -2924,7 +2924,7 @@ async function exportCSV() {
       r.date,
       r.employee_name || '',
       r.employee_position || '',
-      r.record_type === 'travel' ? '移動' : '宿泊',
+      r.record_type === 'travel' ? '移動' : '出張',
       r.depart_time ? new Date(r.depart_time).toLocaleTimeString('ja-JP') : '',
       r.arrive_time ? new Date(r.arrive_time).toLocaleTimeString('ja-JP') : '',
       r.distance,

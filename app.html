@@ -1664,8 +1664,9 @@ document.getElementById('password-input').addEventListener('keypress', e => {
 });
 
 function logout() {
+  // 移動中の場合は確認ダイアログ
   if (state.phase === 'traveling') {
-    if (!confirm('移動中です。ログアウトしますか？')) return;
+    if (!confirm('移動中です。ログアウトしますか？\n（移動状態は保持され、再ログイン時に復元されます）')) return;
   }
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('main-app').style.display = 'none';
@@ -1679,7 +1680,8 @@ function logout() {
   currentCompanyCode = null;
   currentCompanyName = '';
   adminInitialized = false;
-  resetState();
+  // UIだけリセット（移動状態はlocalStorageに保持し、再ログイン時に復元）
+  resetStateUI();
   // 生体認証ボタン再表示
   if (window.PublicKeyCredential && localStorage.getItem('webauthn_cred')) {
     document.getElementById('btn-biometric').style.display = 'flex';
@@ -2272,10 +2274,8 @@ function cancelArrive() {
 }
 
 // ===== 状態リセット =====
-function resetState() {
-  state = { phase:'idle', departTime:null, arriveTime:null, departGPS:null, arriveGPS:null, distance:null, allowance:null, tier:null };
-  localStorage.removeItem(OFFLINE_STATE_KEY);
-
+// UIだけリセット（localStorageとstateオブジェクトは保持）
+function resetStateUI() {
   document.getElementById('status-card').className = 'status-card idle';
   document.getElementById('status-text').textContent = '待機中';
   document.getElementById('status-text').className = 'status-value status-idle';
@@ -2298,6 +2298,12 @@ function resetState() {
   document.getElementById('btn-cancel-arrive').style.display = 'none';
   document.getElementById('input-purpose').value = '';
   document.getElementById('input-person').value = '';
+}
+
+function resetState() {
+  state = { phase:'idle', departTime:null, arriveTime:null, departGPS:null, arriveGPS:null, distance:null, allowance:null, tier:null };
+  localStorage.removeItem(OFFLINE_STATE_KEY);
+  resetStateUI();
 }
 
 // ===== 履歴表示 =====

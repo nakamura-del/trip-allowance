@@ -1837,12 +1837,23 @@ function parseTravelRegulation(text) {
     return amounts;
   }
 
-  // Extract section texts
+  // Extract section texts - try multiple section number patterns
+  // Template v1: 第13条=日当, 第15条=移動日当
+  // Template v2: 第12条=出張手当, 第14条=移動日当
   const sec12 = text.match(/第\s*12\s*条[\s\S]*?(?=第\s*13\s*条)/);
   const sec13 = text.match(/第\s*13\s*条[\s\S]*?(?=第\s*14\s*条)/);
+  const sec14 = text.match(/第\s*14\s*条[\s\S]*?(?=第\s*15\s*条)/);
   const sec15 = text.match(/第\s*15\s*条[\s\S]*?(?=第\s*16\s*条)/);
 
-  if (sec13) result.dailyAllowances = extractPositionAmounts(sec13[0]);
+  // Try to find daily allowances (出張手当/日当) - check multiple sections
+  const dailySections = [sec13, sec12, sec14].filter(Boolean);
+  for (const sec of dailySections) {
+    const amounts = extractPositionAmounts(sec[0]);
+    if (Object.keys(amounts).length > 0) {
+      result.dailyAllowances = amounts;
+      break;
+    }
+  }
 
   // Determine positions from extracted data
   const allPositions = new Set([
@@ -1850,9 +1861,16 @@ function parseTravelRegulation(text) {
   ]);
   result.positions = positionNames.filter(p => allPositions.has(p));
 
-  // Parse travel tiers (第15条)
-  if (sec15) {
-    const tierText = sec15[0];
+  // Parse travel tiers (移動日当) - check multiple sections
+  const tierSections = [sec15, sec14, sec13].filter(Boolean);
+  let tierText = null;
+  for (const sec of tierSections) {
+    if (/km\s*以上/.test(sec[0])) {
+      tierText = sec[0];
+      break;
+    }
+  }
+  if (tierText) {
 
     // Range tiers: NNkm以上MMkm未満 X,XXX円
     const rangeRegex = /(\d+)\s*km\s*以上\s*(\d+)\s*km\s*未満[^0-9]*?(\d[\d,]*)\s*円/g;
@@ -1919,7 +1937,7 @@ function showPdfExtractModal(data) {
   }
 
   if (data.positions.length === 0 && data.travelTiers.length === 0) {
-    html = '<div style="text-align:center;padding:24px;color:var(--danger);">⚠️ 旅費規定から必要な情報を抽出できませんでした。<br><br><div style="text-align:left;font-size:12px;color:var(--text2);line-height:1.8;">PDFに以下の情報が含まれているか確認してください：<br>・役職別の日当（第13条）<br>・移動距離別の移動日当（第15条）<br><br>※ 代表取締役のみの規定でも反映できます。</div></div>';
+    html = '<div style="text-align:center;padding:24px;color:var(--danger);">⚠️ 旅費規定から必要な情報を抽出できませんでした。<br><br><div style="text-align:left;font-size:12px;color:var(--text2);line-height:1.8;">PDFに以下の情報が含まれているか確認してください：<br>・役職別の出張手当／日当（例：代表取締役 20,000円）<br>・移動距離別の移動日当（例：50km以上100km未満 5,000円）<br><br>※ 「○○円」の形式で金額が記載されている必要があります。<br>※ 代表取締役のみの規定でも反映できます。</div></div>';
   }
 
   document.getElementById('pdf-extract-content').innerHTML = html;

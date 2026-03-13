@@ -3676,13 +3676,27 @@ async function reverseGeocode(lat, lng) {
   const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
   if (geocodeCache[key]) return geocodeCache[key];
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1&accept-language=ja`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=ja`, {
+      headers: { 'User-Agent': 'TripAllowanceApp/1.0' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const addr = data.display_name || '';
-    const short = addr.replace(/日本、\s*/g, '').replace(/、/g, '');
-    geocodeCache[key] = short;
-    return short;
+    // addressdetails から住所を組み立て
+    const a = data.address || {};
+    let parts = [];
+    if (a.province || a.state) parts.push(a.province || a.state);
+    if (a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
+    if (a.suburb || a.neighbourhood || a.quarter) parts.push(a.suburb || a.neighbourhood || a.quarter);
+    if (a.road) parts.push(a.road);
+    if (a.house_number) parts.push(a.house_number);
+    let addr = parts.join('');
+    if (!addr) {
+      addr = (data.display_name || '').replace(/日本、?\s*/g, '').replace(/、/g, '');
+    }
+    geocodeCache[key] = addr;
+    return addr;
   } catch(e) {
+    console.warn('reverseGeocode failed:', e);
     return '';
   }
 }

@@ -1456,6 +1456,8 @@ function saveTravelState() {
     arriveTime: state.arriveTime ? state.arriveTime.toISOString() : null,
     departGPS: state.departGPS,
     arriveGPS: state.arriveGPS,
+    departAddress: state.departAddress || '',
+    arriveAddress: state.arriveAddress || '',
     distance: state.distance,
     allowance: state.allowance,
     tier: state.tier,
@@ -1471,6 +1473,8 @@ function restoreTravelState() {
     state.arriveTime = saved.arriveTime ? new Date(saved.arriveTime) : null;
     state.departGPS = saved.departGPS;
     state.arriveGPS = saved.arriveGPS;
+    state.departAddress = saved.departAddress || '';
+    state.arriveAddress = saved.arriveAddress || '';
     state.distance = saved.distance;
     state.allowance = saved.allowance;
     state.tier = saved.tier;
@@ -1921,6 +1925,7 @@ async function depart() {
           `出発: ${state.departTime.toLocaleTimeString('ja-JP')}<br>` +
           `📍 ${addr}<br>` +
           `精度: ±${Math.round(gps.accuracy)}m`;
+        saveTravelState();
       }
     });
 
@@ -1987,6 +1992,7 @@ async function arrive() {
           (departAddr ? `📍 出発: ${departAddr}<br>` : '') +
           `📍 到着: ${addr}<br>` +
           `精度: ±${Math.round(gps.accuracy)}m`;
+        saveTravelState();
       }
     });
 
@@ -2414,9 +2420,10 @@ function afterLogin() {
       document.getElementById('status-card').className = 'status-card traveling';
       document.getElementById('status-text').textContent = '移動中';
       document.getElementById('status-text').className = 'status-value status-moving';
+      const addrText = state.departAddress || `${state.departGPS.lat.toFixed(6)}, ${state.departGPS.lng.toFixed(6)}`;
       document.getElementById('gps-info').innerHTML =
         `出発: ${state.departTime.toLocaleTimeString('ja-JP')}<br>` +
-        `📍 ${state.departGPS.lat.toFixed(6)}, ${state.departGPS.lng.toFixed(6)}<br>` +
+        `📍 ${addrText}<br>` +
         `精度: ±${Math.round(state.departGPS.accuracy)}m`;
       document.getElementById('btn-depart').style.display = 'none';
       document.getElementById('btn-cancel').style.display = 'block';

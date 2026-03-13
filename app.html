@@ -1318,8 +1318,8 @@ let adminInitialized = false;
 
 function switchMode(mode) {
   document.body.dataset.view = mode;
-  document.getElementById('mobile-view').style.display = mode === 'mobile' ? '' : 'none';
-  document.getElementById('admin-view').style.display = mode === 'admin' ? '' : 'none';
+  document.getElementById('mobile-view').style.display = mode === 'mobile' ? 'flex' : 'none';
+  document.getElementById('admin-view').style.display = mode === 'admin' ? 'block' : 'none';
   document.querySelectorAll('#mode-bar .mode-btn').forEach(b => b.classList.remove('active'));
   const activeBtn = document.querySelector('#mode-bar .mode-btn[data-mode="'+mode+'"]');
   if (activeBtn) activeBtn.classList.add('active');

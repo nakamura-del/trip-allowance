@@ -47,14 +47,15 @@
   /* ========== 共通トースト ========== */
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
-    background: var(--text); color: white; padding: 12px 24px;
+    background: var(--surface, #fff); border: 1px solid var(--border, #ddd);
+    color: var(--text, #333); padding: 12px 24px;
     border-radius: 12px; font-size: 13px; font-weight: 500;
     z-index: 10000; transition: transform 0.3s; white-space: nowrap;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.success { background: var(--success); }
-  .toast.error { background: var(--danger); }
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
 
   /* ========== モバイルビュー CSS ========== */
   #mobile-view { display: flex; flex-direction: column; min-height: calc(100vh - 48px); min-height: calc(100dvh - 48px); }
